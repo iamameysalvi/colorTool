@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Color Search</title>
+        <!-- SCRIPTS D3 + SLIDER -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+        <script src="https://d3js.org/topojson.v2.min.js"></script>
+        <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+        <script src="design/src/colormap.js"></script>
+        <script src="design/src/colorramp.js"></script>
+        <script src="lib/colorname/c3.js"></script>
+        <script type="text/javascript" src="lib/colorname/analyzer.js"></script>
+        <script type="text/javascript" src="d3.js"></script>
+        <script type="text/javascript" src="lib/d3.color.js"></script>
+        <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+        <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+        <link href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" rel="stylesheet"/>
+
+        <script src="https://unpkg.com/d3-simple-slider"></script>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+
+        <link rel="stylesheet" href="style.css" />
+        <script src="functions.js"></script>
+        <script src="search.js"></script>
+        <script src="slice2D.js"></script>
+        <script src="colormap.js"></script>
+    </head>
+
+    <body class='no-select'>
+        <!-- LAYOUT TOP GRID -->
+        <div id='grid-top' class='grid-top'>
+            <!-- COLORMAP -->
+            <div class='colormapMain'>
+                <h2><u>COLORMAP</u></h2>
+                <div id='colormap'>
+                    <canvas id="canvasMain" width="725" height="65" style="border: solid 1px gray;"></canvas><br>
+                </div>
+                <div class='colorSel' id='colorSel'></div>
+            </div>
+            <!-- COLOR SEARCH -->
+            <div class='colorSearch' id='colorSearch'>
+                <h2><u>COLOR SEARCH</u></h2>
+                <div class='colorHist' id='colorHist'></div>
+                <div class='searchText' id='searchText'>
+                    <label for='search'>Color Name:</label>
+                    <br>
+                    <input type='text' id='search' class='colorSearch' placeholder='Type Color Name Here...'>
+                </div>
+            </div>
+            <!-- 2D SLICE -->
+            <div class='slice2D'>
+                <h2><u>2D SLICE</u></h2>
+                <div id='slice2D'></div>
+            </div>
+
+        </div>
+
+
+        <script>
+            // DRAW SVG
+            // Colormap + Linegraph
+            var svg_colormap = d3.select('div#colormap')
+                              .append('svg')
+                              .attr('preserveAspectRatio', 'xMinYMin meet')
+                              .attr('viewBox', '0 0 1000 250')
+                            //   .style('background', 'salmon')
+                            .classed('svg-content', true);
+            // Color Search
+            var svg_search = d3.select('div#colorHist')
+                              .append('svg')
+                              .attr('preserveAspectRatio', 'xMinYMin meet')
+                              .attr('viewBox', '0 0 1000 250')
+                              .attr('id', 'scroll')
+                            //   .style('background', 'palegoldenrod')
+                            .classed('svg-content', true);
+            var svg_searchText = d3.select('div#searchText')
+                              .append('svg')
+                              .attr('preserveAspectRatio', 'xMinYMin meet')
+                              .attr('viewBox', '0 0 1000 450')
+                            //   .style('background', 'palegoldenrod')
+                            .classed('svg-content', true);
+            // 2D Slice
+            var svg_slice2D = d3.select('div#slice2D')
+                              .append('svg')
+                              .attr('preserveAspectRatio', 'xMinYMin meet')
+                              .attr('viewBox', '0 0 1000 1100')
+                            //   .style('background', 'plum')
+                              .classed('svg-content', true);
+
+            // // DESELECT DROPDOWN MENU
+            // d3.select('body')
+            // .on('click', function() {
+            //     // document.getElementById('search').value = "";
+            //     svg_searchText.selectAll('text').remove();
+            //     svg_searchText.selectAll('rect').remove();
+            // });
+//.................................................................................................................................................................................................................//
+            // CALL FUNCTIONS
+            // slice2D.js
+            var sliderStepLum;
+            drawSlice2D(lum, sal_init, sal_fin);
+            drawSliderLum();
+            drawSliderSal();
+            // search.js
+            drawSearchBox();
+            searchFunct();
+            // colorName.js
+            var countCol = 0;
+            var datasetSel = [];
+            var datasetDrop = [];
+            drawCanvas();
+            drawSelected();
+//.................................................................................................................................................................................................................//
+
+        </script>
+
+    </body>
+</html>
