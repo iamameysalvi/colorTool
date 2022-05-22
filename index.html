@@ -28,6 +28,7 @@
         <script src="search.js"></script>
         <script src="slice2D.js"></script>
         <script src="colormap.js"></script>
+        <script src="algorithm.js"></script>
     </head>
 
     <body class='no-select'>
@@ -40,23 +41,33 @@
                     <canvas id="canvasMain" width="725" height="65" style="border: solid 1px gray;"></canvas><br>
                 </div>
                 <div class='colorSel' id='colorSel'></div>
+
+                <!-- SUGGESTIONS -->
+                <div class='mapSuggest'>
+                    <h2><u>SUGGESTIONS</u></h2>
+                    <div id='mapSuggest'>
+                        <h6>SUGGESTION 1</h6>
+                        <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                        <h6>SUGGESTION 2</h6>
+                        <canvas id="sugg2" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                        <h6>SUGGESTION 3</h6>
+                        <canvas id="sugg3" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                    </div>
+                </div>
             </div>
             <!-- COLOR SEARCH -->
             <div class='colorSearch' id='colorSearch'>
                 <h2><u>COLOR SEARCH</u></h2>
-                <div class='colorHist' id='colorHist'></div>
+                <div class="grid-search" id="grid-search">
+                    <div class='colorHist' id='colorHist'></div>
+                    <div class="slice2D" id='slice2D'></div>
+                </div>
                 <div class='searchText' id='searchText'>
                     <label for='search'>Color Name:</label>
                     <br>
                     <input type='text' id='search' class='colorSearch' placeholder='Type Color Name Here...'>
                 </div>
             </div>
-            <!-- 2D SLICE -->
-            <div class='slice2D'>
-                <h2><u>2D SLICE</u></h2>
-                <div id='slice2D'></div>
-            </div>
-
         </div>
 
 
@@ -73,21 +84,25 @@
             var svg_search = d3.select('div#colorHist')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                              .attr('viewBox', '0 0 1000 250')
+                            //   .attr('width', 450)
+                            //   .attr('height', 250)
+                              .attr('viewBox', '0 0 800 250')
                               .attr('id', 'scroll')
                             //   .style('background', 'palegoldenrod')
                             .classed('svg-content', true);
             var svg_searchText = d3.select('div#searchText')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                              .attr('viewBox', '0 0 1000 450')
+                              .attr('viewBox', '0 0 1500 450')
                             //   .style('background', 'palegoldenrod')
                             .classed('svg-content', true);
             // 2D Slice
             var svg_slice2D = d3.select('div#slice2D')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                              .attr('viewBox', '0 0 1000 1100')
+                            //   .attr('width', 200)
+                            //   .attr('height', 250)
+                              .attr('viewBox', '0 0 1500 1200')
                             //   .style('background', 'plum')
                               .classed('svg-content', true);
 
@@ -105,13 +120,17 @@
             drawSlice2D(lum, sal_init, sal_fin);
             drawSliderLum();
             drawSliderSal();
+            // algorithm.js
+            var paletteLen = 9;
             // search.js
             drawSearchBox();
             searchFunct();
             // colorName.js
             var countCol = 0;
+            var countDrop = 0;
             var datasetSel = [];
             var datasetDrop = [];
+            var colormap = null;
             drawCanvas();
             drawSelected();
 //.................................................................................................................................................................................................................//
