@@ -63,6 +63,11 @@ body {
 .grid-top {
     display: grid;
     grid-template-columns: 1.5fr 1.5fr;
+<<<<<<< Updated upstream
+=======
+    /* grid-template-columns: 0.5fr 1.25fr 1.25fr; */
+    grid-template-rows: 132%;
+>>>>>>> Stashed changes
     grid-gap: 20px;
     margin-left: 10px;
     margin-right: 10px;
@@ -159,4 +164,10 @@ input[type=text] {
 /*when navigating through the items using the arrow keys:*/
 .colorSearch-active {
     background-color: #e9e9e9;
+}
+
+/* PARTITION LINE */
+.part {
+    border-right: 4px solid #222021;
+    height: 100%;
 }

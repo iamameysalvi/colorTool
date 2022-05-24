@@ -34,11 +34,27 @@
     <body class='no-select'>
         <!-- LAYOUT TOP GRID -->
         <div id='grid-top' class='grid-top'>
+            <!-- SIDEBAR -->
+            <!-- <div class="sidebar">
+                <div class="part">
+                    <h1>COLORTOOL</h1>
+                    <br>
+                    <p>Luminance Profile</p>
+                    <br>
+                    <p>Luminance Difference</p>
+                    <br>
+                    <p>Name Salience</p>
+                    <br>
+                    <p>Perceptual Uniformity</p>
+                    <br>
+                    <p>Smoothness</p>
+                </div>
+            </div> -->
             <!-- COLORMAP -->
             <div class='colormapMain'>
                 <h2><u>COLORMAP</u></h2>
                 <div id='colormap'>
-                    <canvas id="canvasMain" width="725" height="65" style="border: solid 1px gray;"></canvas><br>
+                    <canvas id="canvasMain" width="740" height="65" style="border: solid 1px gray;"></canvas><br>
                 </div>
                 <div class='colorSel' id='colorSel'></div>
 
@@ -106,13 +122,12 @@
                             //   .style('background', 'plum')
                               .classed('svg-content', true);
 
-            // // DESELECT DROPDOWN MENU
-            // d3.select('body')
-            // .on('click', function() {
-            //     // document.getElementById('search').value = "";
-            //     svg_searchText.selectAll('text').remove();
-            //     svg_searchText.selectAll('rect').remove();
-            // });
+            // DROPDOWN MENU FOR KEY POINTS
+            var select = '';
+            for (i=5;i<=20;i+=2){
+                select += '<option val=' + i + '>' + i + '</option>';
+            }
+            $('#keyDrop').html(select);
 //.................................................................................................................................................................................................................//
             // CALL FUNCTIONS
             // slice2D.js

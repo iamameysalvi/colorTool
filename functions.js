@@ -128,8 +128,8 @@ function cie00Distance(c1, c2) {
     var c1 = Math.sqrt(col1.a**2 + col1.b**2);
     var c2 = Math.sqrt(col2.a**2 + col2.b**2);
 
-    var delL = col2.l - col1.l;
-    var barL = (col1.l + col2.l)/2;
+    var delL = col2.L - col1.L;
+    var barL = (col1.L + col2.L)/2;
     var barC = (c1 + c2)/2;
 
     var dashA1 = col1.a + (col1.a/2) * (1 - Math.sqrt(barC ** 7/(barC ** 7 + 25 ** 7)));
