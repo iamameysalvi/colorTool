@@ -28,15 +28,6 @@ function genRandomPalette(col_len) {
             rgb = d3.rgb(lab); 
 
             // // Push to Dataset - new dataset (add to pre-owned colors)
-<<<<<<< Updated upstream
-            // datasetDrop.push({
-            //     RGB: [Math.round(rgb.r), Math.round(rgb.g), Math.round(rgb.b)],
-            //     LAB: [lab.L,lab.a,lab.b],
-            //     sel: 0
-            //     // pts: [lab.a, lab.b]
-            // })
-=======
->>>>>>> Stashed changes
             if(palette[len].sel == 0) {
                 var selRect = ({
                     RGB: [Math.round(rgb.r), Math.round(rgb.g), Math.round(rgb.b)],
@@ -68,12 +59,9 @@ function evalPalette(palette, col_len) {
     }
     var nSalience = name_sal/sample_sal;
 
-<<<<<<< Updated upstream
-=======
     
 
     // Weights
->>>>>>> Stashed changes
     return nSalience;
 }
 
@@ -112,13 +100,6 @@ function randomDisturbColors(palette) {
 
 function simulatedAnnealing2FindBestPalette(size, evaluateFunc) {
     var iterate_times = 0;
-<<<<<<< Updated upstream
-    //default parameters
-    var max_temper = 100000; // initial temperature
-    var dec = 0.99; // decrementation
-    var max_iteration_times = 10000000; 
-    var end_temper = 0.001; // end temperature
-=======
     // //default parameters
     // var max_temper = 100000; // initial temperature
     // var dec = 0.99; // decrementation
@@ -131,7 +112,6 @@ function simulatedAnnealing2FindBestPalette(size, evaluateFunc) {
     var dec = 0.99; // decrementation
     var max_iteration_times = 10; 
     var end_temper = 0.1; // end temperature
->>>>>>> Stashed changes
     var cur_temper = max_temper;
     var dataset_top = [];
 
@@ -173,11 +153,7 @@ function simulatedAnnealing2FindBestPalette(size, evaluateFunc) {
     drawSuggestmap(dataset_top.reverse()[1].id, "#sugg1");
     drawSuggestmap(dataset_top.reverse()[2].id, "#sugg2");
     drawSuggestmap(dataset_top.reverse()[3].id, "#sugg3");
-<<<<<<< Updated upstream
-    console.log(dataset_top);
-=======
     // console.log(dataset_top);
->>>>>>> Stashed changes
 
     return preferredObj;
 }
