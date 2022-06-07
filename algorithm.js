@@ -269,10 +269,10 @@ function evalPalette(palette, col_len, minl, maxl) {
         // var wLBO = val_lboSimD;
         // var wSmo = val_smoSimD;
         var wSal = 40;
-        var wLD = -1000;
-        var wPU = -10;
-        var wLBO = -30;
-        var wSmo = -20;
+        var wLD = -100000;
+        var wPU = -100;
+        var wLBO = -500;
+        var wSmo = -100;
     }
     return (wSal * nSalience) + (wLD * lumDifference) + (wPU * perc_fin) + (wLBO * lbo_val) + (wSmo * angleDiff);
     // return (wLD * lumDifference) + (wPU * perc_fin);
