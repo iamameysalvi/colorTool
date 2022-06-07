@@ -78,8 +78,8 @@ function drawLumDiff() {
                     // Onchange Value
                     .on('onchange', valLD => {
                         svg_sidebar.selectAll('text.sliderLumText').remove();
-                            val_ldSimL = valLD * -1000;
-                            val_ldSimD = valLD * -1000;
+                            val_ldSimL = valLD * -100000;
+                            val_ldSimD = valLD * -100000;
                         // Text Value
                         svg_sidebar.append('text')
                                     .attr('class','sliderLumText')
@@ -167,8 +167,8 @@ function drawPU() {
                         // Onchange Value
                         .on('onchange', valPU => {
                             svg_sidebar.selectAll('text.sliderPUText').remove();
-                                val_puSimL = valPU * -30;
-                                val_puSimD = valPU * -10;
+                                val_puSimL = valPU * -1000;
+                                val_puSimD = valPU * -100;
                             // Text Value
                             svg_sidebar.append('text')
                                         .attr('class','sliderPUText')
@@ -212,8 +212,8 @@ function drawSmo() {
                         // Onchange Value
                         .on('onchange', valSmo => {
                             svg_sidebar.selectAll('text.sliderSmoText').remove();
-                                val_smoSimL = valSmo * -20;
-                                val_smoSimD = valSmo * -20;
+                                val_smoSimL = valSmo * 200;
+                                val_smoSimD = valSmo * 100;
                             // Text Value
                             svg_sidebar.append('text')
                                         .attr('class','sliderSmoText')

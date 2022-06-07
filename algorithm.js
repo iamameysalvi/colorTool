@@ -250,29 +250,35 @@ function evalPalette(palette, col_len, minl, maxl) {
 
     // Weights
     if(lumRadio == 'linear') {
+        // Slider weights changes
         // var wSal = val_salSimL;
         // var wLD = val_ldSimL;
         // var wPU = val_puSimL;
         // var wLBO = val_lboSimL;
         // var wSmo = val_smoSimL;
+        
+        // Manual weights changes
         var wSal = 10;
         var wLD = -100000;
         var wPU = -1000;
         var wLBO = -100;
-        var wSmo = -200;
+        var wSmo = 200;
     }
     // Diverging
     else if (lumRadio == 'diverging') {
+        // Slider weights changes
         // var wSal = val_salSimD;
         // var wLD = val_ldSimD;
         // var wPU = val_puSimD;
         // var wLBO = val_lboSimD;
         // var wSmo = val_smoSimD;
+
+        // Manual weights changes
         var wSal = 40;
         var wLD = -100000;
         var wPU = -100;
         var wLBO = -500;
-        var wSmo = -100;
+        var wSmo = 100;
     }
     return (wSal * nSalience) + (wLD * lumDifference) + (wPU * perc_fin) + (wLBO * lbo_val) + (wSmo * angleDiff);
     // return (wLD * lumDifference) + (wPU * perc_fin);

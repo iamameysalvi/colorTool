@@ -153,11 +153,14 @@
             drawSlice2D(lum, sal_init, sal_fin);
             drawSliderLum();
             drawSliderSal();
+
             // algorithm.js
             var paletteLen = 9;
+
             // search.js
             drawSearchBox();
             searchFunct();
+
             // colormap.js
             var countCol = 0;
             var countDrop = 0;
@@ -167,7 +170,9 @@
             drawCanvas();
             drawSelected();
             drawAxes();
+
             // sidebar.js
+            // Sliders for Constraints
             drawHeaders();
             // drawSimSal();
             // drawLumDiff();
@@ -182,18 +187,19 @@
                 calcPalette(paletteLen, val_lum[0], val_lum[1]);
             }
             var val_algoIter = 100;
-            // // Linear Vals
-            // var val_salSimL = 5;
-            // var val_ldSimL = -500;
-            // var val_puSimL = -15;
-            // var val_lboSimL = -15;
-            // var val_smoSimL = 10;
-            // // Diverging Vals
-            // var val_salSimD = 20;
-            // var val_ldSimD = -500;
-            // var val_puSimD = -5;
-            // var val_lboSimD = -15;
-            // var val_smoSimD = 10;
+            // // Linear Weights
+            // var val_salSimL = 10;
+            // var val_ldSimL = -100000;
+            // var val_puSimL = -1000;
+            // var val_lboSimL = -100;
+            // var val_smoSimL = 200;
+
+            // // Diverging Weights
+            // var val_salSimD = 40;
+            // var val_ldSimD = -100000;
+            // var val_puSimD = -100;
+            // var val_lboSimD = -500;
+            // var val_smoSimD = 100;
 //.................................................................................................................................................................................................................//
 
         </script>
