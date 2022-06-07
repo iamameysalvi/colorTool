@@ -29,37 +29,52 @@
         <script src="slice2D.js"></script>
         <script src="colormap.js"></script>
         <script src="algorithm.js"></script>
+        <script src="sidebar.js"></script>
+        <script src="linegraph.js"></script>
     </head>
 
     <body class='no-select'>
         <!-- LAYOUT TOP GRID -->
         <div id='grid-top' class='grid-top'>
             <!-- SIDEBAR -->
-            <!-- <div class="sidebar">
-                <div class="part">
+            <div class='sidebar' id='sidebar'>
+                <div class='part' id='part'>
                     <h1>COLORTOOL</h1>
                     <br>
                     <p>Luminance Profile</p>
+                    <input type='radio' name='radioButton' value='linear' id='linearBut' checked onchange='radioChange()'>
+                    <label for='linearBut' class='option linearBut'>
+                        <span>LINEAR</span>
+                    <input type='radio' name='radioButton' value='diverging' id='divergingBut' onchange='radioChange()'>
+                    <label for='divergingBut' class='option divergingBut'>
+                        <span>DIVERGING</span>
                     <br>
-                    <p>Luminance Difference</p>
-                    <br>
-                    <p>Name Salience</p>
-                    <br>
-                    <p>Perceptual Uniformity</p>
-                    <br>
-                    <p>Smoothness</p>
                 </div>
-            </div> -->
+            </div>
             <!-- COLORMAP -->
             <div class='colormapMain'>
                 <h2><u>COLORMAP</u></h2>
                 <div id='colormap'>
-                    <canvas id="canvasMain" width="740" height="65" style="border: solid 1px gray;"></canvas><br>
+                    <canvas id='canvasMain' width='740' height='65' style='border: solid 1px gray;'></canvas><br>
+                    <button type='button' class='iconButton' onclick='calcPalette(paletteLen, val_lum[0], val_lum[1]);' id='replay' value='replay'><i class='material-icons' style='font-size: 2em;'>replay</i>
+                        <p>Regenerate</p>
+                    </button>
                 </div>
                 <div class='colorSel' id='colorSel'></div>
+                <!-- LINEGRAPH -->
+                <div class='linesMain' id='linesMain'>
+                    <select id='lineButton' name='lineButton' class="lineButton" onchange='drawLinegraph(datasetDrop)'>
+                        <option value='Luminance'>Luminance</option>
+                        <option value='Saliency'>Saliency</option>
+                        <option value='CIE00 Distance'>CIE00 Distance</option>
+                        <option value='Name Difference'>Name Difference</option>
+                        <option value='Eucledian Distance'>Eucledian Distance</option>
+                    </select>
+                    <div class='lineGraph' id='lineGraph'></div>
+                </div>
 
                 <!-- SUGGESTIONS -->
-                <div class='mapSuggest'>
+                <!-- <div class='mapSuggest'>
                     <h2><u>SUGGESTIONS</u></h2>
                     <div id='mapSuggest'>
                         <h6>SUGGESTION 1</h6>
@@ -69,7 +84,7 @@
                         <h6>SUGGESTION 3</h6>
                         <canvas id="sugg3" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
                     </div>
-                </div>
+                </div> -->
             </div>
             <!-- COLOR SEARCH -->
             <div class='colorSearch' id='colorSearch'>
@@ -95,32 +110,42 @@
                               .attr('preserveAspectRatio', 'xMinYMin meet')
                               .attr('viewBox', '0 0 1000 250')
                             //   .style('background', 'salmon')
-                            .classed('svg-content', true);
+                              .classed('svg-content', true);
             // Color Search
             var svg_search = d3.select('div#colorHist')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                            //   .attr('width', 450)
-                            //   .attr('height', 250)
                               .attr('viewBox', '0 0 800 250')
                               .attr('id', 'scroll')
                             //   .style('background', 'palegoldenrod')
-                            .classed('svg-content', true);
+                              .classed('svg-content', true);
             var svg_searchText = d3.select('div#searchText')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
                               .attr('viewBox', '0 0 1500 450')
                             //   .style('background', 'palegoldenrod')
-                            .classed('svg-content', true);
+                              .classed('svg-content', true);
             // 2D Slice
             var svg_slice2D = d3.select('div#slice2D')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                            //   .attr('width', 200)
-                            //   .attr('height', 250)
                               .attr('viewBox', '0 0 1500 1200')
                             //   .style('background', 'plum')
                               .classed('svg-content', true);
+            // Sliders
+            var svg_sidebar = d3.select('div#part')
+                              .append('svg')
+                              .attr('preserveAspectRatio', 'xMinYMin meet')
+                              .attr('viewBox', '0 0 500 1100')
+                            //   .style('background', 'plum')
+                              .classed('svg-content', true);
+            // Line Graph
+            var svg_linegraph = d3.select('div#lineGraph')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 300')
+                                //   .style('background', 'plum')
+                                .classed('svg-content', true);
 //.................................................................................................................................................................................................................//
             // CALL FUNCTIONS
             // slice2D.js
@@ -133,7 +158,7 @@
             // search.js
             drawSearchBox();
             searchFunct();
-            // colorName.js
+            // colormap.js
             var countCol = 0;
             var countDrop = 0;
             var datasetSel = [];
@@ -141,6 +166,34 @@
             var colormap = null;
             drawCanvas();
             drawSelected();
+            drawAxes();
+            // sidebar.js
+            drawHeaders();
+            // drawSimSal();
+            // drawLumDiff();
+            // drawSLum();
+            // drawPU();
+            // drawSmo();
+            drawIter();
+            var val_lum = [0,100];
+            var lumRadio = 'linear';
+            function radioChange() {
+                lumRadio = d3.select('input[name="radioButton"]:checked').property("value");
+                calcPalette(paletteLen, val_lum[0], val_lum[1]);
+            }
+            var val_algoIter = 100;
+            // // Linear Vals
+            // var val_salSimL = 5;
+            // var val_ldSimL = -500;
+            // var val_puSimL = -15;
+            // var val_lboSimL = -15;
+            // var val_smoSimL = 10;
+            // // Diverging Vals
+            // var val_salSimD = 20;
+            // var val_ldSimD = -500;
+            // var val_puSimD = -5;
+            // var val_lboSimD = -15;
+            // var val_smoSimD = 10;
 //.................................................................................................................................................................................................................//
 
         </script>
