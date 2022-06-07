@@ -67,7 +67,7 @@ function drawLumDiff() {
                     .width(300)
                     .tickFormat(d3.format('.2d'))
                     .ticks(0)
-                    .default(0.5)
+                    .default(1)
                     .displayValue(false)
                     .fill('#761137')
                     .handle(
@@ -99,7 +99,7 @@ function drawLumDiff() {
                 .attr('y', 150)
                 .style('font-size', 41)
                 .style('fill', '#757575')
-                .text('0.50');
+                .text('1.00');
 }
 
 function drawSimSal() {
@@ -111,7 +111,7 @@ function drawSimSal() {
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(0.5)
+                        .default(1)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -144,7 +144,7 @@ function drawSimSal() {
                 .attr('y', 830)
                 .style('font-size', 41)
                 .style('fill', '#757575')
-                .text('0.5');
+                .text('1.00');
 }
 
 function drawPU() {
@@ -156,7 +156,7 @@ function drawPU() {
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(0.5)
+                        .default(1)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -189,7 +189,7 @@ function drawPU() {
                 .attr('y', 490)
                 .style('font-size', 41)
                 .style('fill', '#757575')
-                .text('0.5');
+                .text('1.00');
 }
 
 function drawSmo() {
@@ -201,7 +201,7 @@ function drawSmo() {
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(0.5)
+                        .default(1)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -234,7 +234,7 @@ function drawSmo() {
                 .attr('y', 660)
                 .style('font-size', 41)
                 .style('fill', '#757575')
-                .text('0.5');
+                .text('1.00');
 }
 
 function drawSLum() {
