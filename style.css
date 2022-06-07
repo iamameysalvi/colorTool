@@ -24,7 +24,7 @@ body {
     font-weight: normal;
     font-style: normal;
     font-size: 24px;  /* Preferred icon size */
-    color: #F5F5F5;
+    color: #222021;
     display: inline-block;
     line-height: 1;
     text-transform: none;
@@ -40,6 +40,15 @@ body {
     -moz-osx-font-smoothing: grayscale;
     /* Support for IE. */
     font-feature-settings: 'liga';
+}
+/* ICON BUTTON */
+.iconButton {
+    display: inline-block;
+    background-color: #F5F5F5;
+    border: 0em solid;
+}
+.iconButton:hover {
+    color: #800000;
 }
 
 /* NO SELECTION ON PAGE */
@@ -62,7 +71,9 @@ body {
 /* TOP GRID */
 .grid-top {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 0.5fr;
+    /* grid-template-columns: 1.5fr 1.5fr; */
+    grid-template-columns: 0.5fr 1.25fr 1.25fr;
+    grid-template-rows: 100%;
     grid-gap: 20px;
     margin-left: 10px;
     margin-right: 10px;
@@ -101,6 +112,14 @@ body {
     font-size: 16px
 }
 
+.grid-search {
+    display: grid;
+    grid-template-columns: 0.5fr 0.5fr;
+    grid-gap: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
 /* COLOR SEARCH TEXT BOX */
 .colorSearch {
     position: relative;
@@ -116,7 +135,6 @@ input[type=text] {
     background-color: #DADADA;
     width: 100%;
 }
-
 
 /*the container must be positioned relative:*/
 .colorSearch {
@@ -153,3 +171,21 @@ input[type=text] {
 .colorSearch-active {
     background-color: #e9e9e9;
 }
+
+/* PARTITION LINE */
+.part {
+    border-right: 4px solid #222021;
+    height: 100%;
+}
+.part p {
+    font-size: 15px;
+}
+
+/* select.profileButton option {
+    background-repeat:no-repeat;
+    background-position:bottom left;
+    padding-left:30px;
+}
+select#profileButton option[value='linear'] {
+    background-image:url(flags/usa.png);
+} */

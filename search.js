@@ -210,7 +210,10 @@ function searchFunct() {
                           datasetSel.push({
                             lab: d3.select(this).attr('index'),
                             name: d3.select(this).attr('title'),
-                            fill: d3.select(this).attr('fill')
+                            fill: d3.select(this).attr('fill'),
+                            RGB: [d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).b],
+                            LAB: [d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).L, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).a, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).b],
+                            sel: 1
                           })
                           function drawColorSearch() {
                             svg_colormap.selectAll('rect.addCol')
@@ -245,63 +248,253 @@ function searchFunct() {
                                           var rectDrop = d3.select(this);
                                           // Change Border Thickness
                                           rectDrop.attr('stroke-width', 5);
+                                          var selMouse = d3.mouse(rectDrop.node());
+                                          var selCoord = [
+                                              +d3.select(this).attr('x'), +d3.select(this).attr('y')
+                                          ];
                                           
                                           // Move Rectangle
                                           d3.select(document).on('mousemove', function() {
-                                                                  // Get Mouse Co-Ordinates
-                                                                  rectDrop.attr('x', d3.event.x)
-                                                                          .attr('y', d3.event.y - 85);
-                                                                  // Add Color to Slider Canvas
-                                                                  svg_colormap.select('rect.dropCanvas').attr('fill', '#FFD0D0').attr('opacity', 0.5);
+                                              // Get Mouse Co-Ordinates
+                                              var newMouse = d3.mouse(rectDrop.node());
+                                              var delMouse = [
+                                                  newMouse[0]-selMouse[0], newMouse[1]-selMouse[1]
+                                              ];
+                                              rectDrop.attr('x', selCoord[0] + delMouse[0])
+                                                      .attr('y', selCoord[1] + delMouse[1]);
+              
+                                              // Add Color to Slider Canvas
+                                              svg_colormap.select('rect.dropCanvas').attr('fill', '#FAE6E6').attr('opacity', 0.2);
+              
+                                              if(contains(svg_colormap.select('rect.dropCanvas'),newMouse) == true) {
+                                                  var canWd = d3.select('rect.dropCanvas').attr('width');
+                                                  var dropPos = Math.floor(paletteLen * newMouse[0]/canWd);
+                                                  var dropX = dropPos * (canWd/paletteLen);
+                                                  var dropWd = Math.ceil(paletteLen * newMouse[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                  // Draw Added Colors
+                                                  svg_colormap.append('rect')
+                                                              .attr('class', 'contCol')
+                                                              .attr('x', dropX)
+                                                              .attr('y', 10)
+                                                              .attr('width', dropWd)
+                                                              .attr('height', 75)
+                                                              .attr('fill', '#FFD0D0')
+                                                              .attr('opacity', 0.05)
+                                                              .attr('stroke', '#000');
+                                                  if(contains(svg_colormap.select('rect.contCol'),newMouse) == true) {
+                                                      // Draw Added Colors
+                                                      svg_colormap.append('rect')
+                                                                  .attr('class', 'hoverCol')
+                                                                  .attr('x', dropX)
+                                                                  .attr('y', 10)
+                                                                  .attr('width', dropWd)
+                                                                  .attr('height', 75)
+                                                                  .attr('fill', '#FFD0D0')
+                                                                  .attr('opacity', 0.05)
+                                                                  .attr('stroke', '#000');
+                                                  }
+                                                  else {
+                                                      svg_colormap.selectAll('rect.contCol').remove();
+                                                      svg_colormap.selectAll('rect.hoverCol').remove();
+                                                  }
+                                              }
+                                              else {
+                                                  svg_colormap.selectAll('rect.contCol').remove();
+                                                  svg_colormap.selectAll('rect.hoverCol').remove();
+                                              }
+                                              svg_colormap.select('rect.dropCanvas').attr('opacity', 1);
                                           })
               
                                           d3.select(document).on('mouseup', function() {
-                                                                  // Change Border Thickness
-                                                                  rectDrop.attr('stroke-width', 1);
-                                                                  svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
-                                                                  // Get Drop-off Mouse Co-Ordinates
-                                                                  var xTest = d3.event.x;
-                                                                  var yTest = d3.event.y - 85;
-                                                                  var ptTest = [xTest, yTest];
-                                                                  // Stop Mouse Events
-                                                                  d3.select(document)
-                                                                      .on('mousemove', null)
-                                                                      .on('mouseup', null);
-                                                                  if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
-                                                                      // Update Selected Color Dataset using Index
-                                                                      var idDrop = rectDrop.attr('index');
-                                                                      datasetSel.splice(idDrop,1);
-                                                                      // Remove Selected Colors
-                                                                      svg_colormap.selectAll('rect.addCol').remove();
-                                                                      // Add Color to Dropped Dataset
-                                                                      datasetDrop.push({
-                                                                          lab: rectDrop.data()[0].lab,
-                                                                          name: rectDrop.data()[0].name,
-                                                                          fill: rectDrop.data()[0].fill
-                                                                      });
-                                                                      // Draw Added Colors
-                                                                      svg_colormap.selectAll('rect.dropCol')
-                                                                                  .data(datasetDrop)
-                                                                                  .enter()
-                                                                                  .append('rect')
-                                                                                  .attr('class', 'dropCol')
-                                                                                  .attr('index', function(d, i) { return i; })
-                                                                                  .attr('x', function(d,i) { return 10 + i * 60; })
-                                                                                  .attr('y', 20)
-                                                                                  .attr('width', 50)
-                                                                                  .attr('height', 55)
-                                                                                  .attr('fill', function(d) { return d.fill; })
-                                                                                  .attr('stroke', '#000')
-                                                                      drawColorSearch();
-                                                                      svg_colormap.selectAll('text.sliderText').remove();
-                                                                  }
-                                                                  else {
-                                                                      svg_colormap.selectAll('rect.addCol').remove();
-                                                                      drawColorSearch();
-                                                                  }
+                                              svg_colormap.selectAll('rect.hoverCol').remove();
+                                              // Change Border Thickness
+                                              rectDrop.attr('stroke-width', 1);
+                                              svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
+                                              // Get Drop-off Mouse Co-Ordinates
+                                              var dropMouse = d3.mouse(rectDrop.node());
+                                              // var xTest = d3.event.x;
+                                              // var yTest = d3.event.y - 85;
+                                              // var ptTest = [xTest, yTest];
+                                              var ptTest = [dropMouse[0], dropMouse[1]];
+                                              // Stop Mouse Events
+                                              d3.select(document)
+                                                  .on('mousemove', null)
+                                                  .on('mouseup', null);
+                                              if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
+                                                  // Update Selected Color Dataset using Index
+                                                  var idDrop = rectDrop.attr('index');
+                                                  datasetSel.splice(idDrop,1);
+                                                  // Remove Selected Colors
+                                                  svg_colormap.selectAll('rect.addCol').remove();
+                                                  // Add Color to Dropped Dataset
+                                                  var canWd = d3.select('rect.dropCanvas').attr('width')
+                                                  var dropPos = Math.floor(paletteLen * ptTest[0]/canWd);
+                                                  var dropX = dropPos * (canWd/paletteLen);
+                                                  var dropWd = Math.ceil(paletteLen * ptTest[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                  var dropRect = ({
+                                                      lab: rectDrop.data()[0].lab,
+                                                      name: rectDrop.data()[0].name,
+                                                      fill: rectDrop.data()[0].fill,
+                                                      RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                      LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                      sel: 1
+                                                  });
+                                                  function drawDropCol() {
+                                                      // Draw Added Colors
+                                                      svg_colormap.append('rect')
+                                                                  .attr('class', 'dropCol')
+                                                                  .attr('x', dropX)
+                                                                  .attr('y', 10)
+                                                                  .attr('width', dropWd)
+                                                                  .attr('height', 75)
+                                                                  .attr('fill', dropRect.fill)
+                                                                  .attr('stroke', '#000')
+                                                                  .on('click', function() {
+                                                                      d3.selectAll('rect.widgBox').remove();
+                                                                      d3.selectAll('rect.widgCol').remove();
+                                                                      d3.selectAll('text#faClose').remove();
+                                                                      // Widget Box
+                                                                      svg_colormap.append('rect')
+                                                                                  .attr('class', 'widgBox')
+                                                                                  .attr('x', function() { 
+                                                                                      if(dropPos < 5) {
+                                                                                          return dropX;
+                                                                                      }
+                                                                                      else {
+                                                                                          return dropX - 75;
+                                                                                      }
+                                                                                  })
+                                                                                  .attr('y', 95)
+                                                                                  .attr('width', 175)
+                                                                                  .attr('height', 115)
+                                                                                  .attr('fill', "#FFF")
+                                                                                  .attr('stroke', '#000');
+              
+                                                                      // Close Widget Button
+                                                                      svg_colormap.append('text')
+                                                                                  .attr('x', function() { 
+                                                                                      if(dropPos < 5) {
+                                                                                          return dropX + 175;
+                                                                                      }
+                                                                                      else {
+                                                                                          return dropX + 100;
+                                                                                      }
+                                                                                  })
+                                                                                  .attr('y', 95)
+                                                                                  .attr('class', 'fa')
+                                                                                  .attr('id', 'faClose')
+                                                                                  .text('\uf00d')
+                                                                                  .attr('fill', '#222021')
+                                                                                  .on('mouseover', function() {
+                                                                                      d3.select(this).attr('fill', '#800000')
+                                                                                  })
+                                                                                  .on('mouseout', function() {
+                                                                                      d3.select(this).attr('fill', '#222021')
+                                                                                  })
+                                                                                  .on('click', function() {
+                                                                                      d3.selectAll('rect.widgBox').remove();
+                                                                                      d3.selectAll('rect.widgCol').remove();
+                                                                                      d3.selectAll('text#faClose').remove();
+                                                                                  })
+                                                                                  .append('title').text('Close Widget');
+              
+                                                                      // Selected Color
+                                                                      var currDrop = d3.select(this);
+                                                                      var currHSL = d3.hsl(currDrop.attr('fill'));
+                                                                      // Widget Colors
+                                                                      for(i=0; i<1.25; i+=0.25) {
+                                                                          for(j=0.25; j<1; j+=0.25) {
+                                                                              currHSL.s = currHSL.s * i;
+                                                                              currHSL.l = currHSL.l * j;
+                                                                              svg_colormap.append('rect')
+                                                                                          .attr('class', 'widgCol')
+                                                                                          .attr('x', function() { 
+                                                                                              if(dropPos < 5) {
+                                                                                                  return (10 + dropX) + i*125;
+                                                                                              }
+                                                                                              else {
+                                                                                                  return (10 + dropX - 75) + i*125;
+                                                                                              }
+                                                                                          })
+                                                                                          .attr('y', 75 + j*125)
+                                                                                          .attr('width', 25)
+                                                                                          .attr('height', 25)
+                                                                                          .attr('fill', currHSL)
+                                                                                          .attr('stroke', '#000')
+                                                                                          .attr('stroke-width', 1)
+                                                                                          .on('mouseover', function() {
+                                                                                              var moCol = d3.select(this);
+                                                                                              moCol.attr('stroke-width', 3);
+                                                                                          })
+                                                                                          .on('mouseout', function() {
+                                                                                              var moCol = d3.select(this);
+                                                                                              moCol.attr('stroke-width', 1);
+                                                                                          })
+                                                                                          .on('click', function() {
+                                                                                              var moCol = d3.select(this);
+                                                                                              dropRect = ({
+                                                                                                  lab: 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5),
+                                                                                                  name: termDistribution(moCol.attr('fill'))[0].term,
+                                                                                                  fill: moCol.attr('fill'),
+                                                                                                  RGB: [moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]],
+                                                                                                  LAB: [5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5)],
+                                                                                                  sel: 1
+                                                                                              });
+                                                                                              datasetDrop.splice(dropPos, 1, dropRect);
+                                                                                              d3.selectAll('rect.widgBox').remove();
+                                                                                              d3.selectAll('rect.widgCol').remove();
+                                                                                              d3.selectAll('text#faClose').remove();
+                                                                                              drawDropCol();
+                                                                                              calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                                                                          });
+                                                                              currHSL.s = 1;
+                                                                              currHSL.l = 1;
+                                                                          }
+                                                                      }
+                                                                  });
+                                                  }
+                                                  drawDropCol();
+                                                  drawColorSearch();
+                                                  svg_colormap.selectAll('text.sliderText').remove();
+              
+                                                  if(countDrop == 0) {
+                                                      datasetDrop.push(dropRect);
+                                                      drawColormap(datasetDrop);
+                                                      
+                                                      countDrop++;
+                                                      for(var k=0; k<(paletteLen-1);k++) {
+                                                          datasetDrop.push({
+                                                              lab: rectDrop.data()[0].lab,
+                                                              name: rectDrop.data()[0].name,
+                                                              fill: rectDrop.data()[0].fill,
+                                                              RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                              LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                              sel: 0
+                                                          });
+                                                      }
+                                                      const element = datasetDrop.splice(0, 1)[0];
+                                                      datasetDrop.splice(dropPos, 0, element);
+                                                  }
+                                                  else {
+                                                      var tempRect = ({
+                                                          lab: rectDrop.data()[0].lab,
+                                                          name: rectDrop.data()[0].name,
+                                                          fill: rectDrop.data()[0].fill,
+                                                          RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                          LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                          sel: 1
+                                                      });
+                                                      datasetDrop.splice(dropPos, 1, tempRect);
+                                                  }
+                                                  calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                              }
+                                              else {
+                                                  svg_colormap.selectAll('rect.addCol').remove();
+                                                  drawColorSearch();
+                                              }
                                           })
                                       });
-                          }
+                          } 
                           drawColorSearch();
                           countCol++;
                         }
@@ -380,7 +573,10 @@ function searchFunct() {
                           datasetSel.push({
                             lab: d3.select(this).attr('index'),
                             name: d3.select(this).attr('title'),
-                            fill: d3.select(this).attr('fill')
+                            fill: d3.select(this).attr('fill'),
+                            RGB: [d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).b],
+                            LAB: [d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).L, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).a, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).b],
+                            sel: 1
                           })
                           function drawColorSearchBox() {
                             svg_colormap.selectAll('rect.addCol')
@@ -415,60 +611,250 @@ function searchFunct() {
                                           var rectDrop = d3.select(this);
                                           // Change Border Thickness
                                           rectDrop.attr('stroke-width', 5);
+                                          var selMouse = d3.mouse(rectDrop.node());
+                                          var selCoord = [
+                                              +d3.select(this).attr('x'), +d3.select(this).attr('y')
+                                          ];
                                           
                                           // Move Rectangle
                                           d3.select(document).on('mousemove', function() {
-                                                                  // Get Mouse Co-Ordinates
-                                                                  rectDrop.attr('x', d3.event.x)
-                                                                          .attr('y', d3.event.y - 85);
-                                                                  // Add Color to Slider Canvas
-                                                                  svg_colormap.select('rect.dropCanvas').attr('fill', '#FFD0D0').attr('opacity', 0.5);
+                                              // Get Mouse Co-Ordinates
+                                              var newMouse = d3.mouse(rectDrop.node());
+                                              var delMouse = [
+                                                  newMouse[0]-selMouse[0], newMouse[1]-selMouse[1]
+                                              ];
+                                              rectDrop.attr('x', selCoord[0] + delMouse[0])
+                                                      .attr('y', selCoord[1] + delMouse[1]);
+              
+                                              // Add Color to Slider Canvas
+                                              svg_colormap.select('rect.dropCanvas').attr('fill', '#FAE6E6').attr('opacity', 0.2);
+              
+                                              if(contains(svg_colormap.select('rect.dropCanvas'),newMouse) == true) {
+                                                  var canWd = d3.select('rect.dropCanvas').attr('width');
+                                                  var dropPos = Math.floor(paletteLen * newMouse[0]/canWd);
+                                                  var dropX = dropPos * (canWd/paletteLen);
+                                                  var dropWd = Math.ceil(paletteLen * newMouse[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                  // Draw Added Colors
+                                                  svg_colormap.append('rect')
+                                                              .attr('class', 'contCol')
+                                                              .attr('x', dropX)
+                                                              .attr('y', 10)
+                                                              .attr('width', dropWd)
+                                                              .attr('height', 75)
+                                                              .attr('fill', '#FFD0D0')
+                                                              .attr('opacity', 0.05)
+                                                              .attr('stroke', '#000');
+                                                  if(contains(svg_colormap.select('rect.contCol'),newMouse) == true) {
+                                                      // Draw Added Colors
+                                                      svg_colormap.append('rect')
+                                                                  .attr('class', 'hoverCol')
+                                                                  .attr('x', dropX)
+                                                                  .attr('y', 10)
+                                                                  .attr('width', dropWd)
+                                                                  .attr('height', 75)
+                                                                  .attr('fill', '#FFD0D0')
+                                                                  .attr('opacity', 0.05)
+                                                                  .attr('stroke', '#000');
+                                                  }
+                                                  else {
+                                                      svg_colormap.selectAll('rect.contCol').remove();
+                                                      svg_colormap.selectAll('rect.hoverCol').remove();
+                                                  }
+                                              }
+                                              else {
+                                                  svg_colormap.selectAll('rect.contCol').remove();
+                                                  svg_colormap.selectAll('rect.hoverCol').remove();
+                                              }
+                                              svg_colormap.select('rect.dropCanvas').attr('opacity', 1);
                                           })
               
                                           d3.select(document).on('mouseup', function() {
-                                                                  // Change Border Thickness
-                                                                  rectDrop.attr('stroke-width', 1);
-                                                                  svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
-                                                                  // Get Drop-off Mouse Co-Ordinates
-                                                                  var xTest = d3.event.x;
-                                                                  var yTest = d3.event.y - 85;
-                                                                  var ptTest = [xTest, yTest];
-                                                                  // Stop Mouse Events
-                                                                  d3.select(document)
-                                                                      .on('mousemove', null)
-                                                                      .on('mouseup', null);
-                                                                  if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
-                                                                      // Update Selected Color Dataset using Index
-                                                                      var idDrop = rectDrop.attr('index');
-                                                                      datasetSel.splice(idDrop,1);
-                                                                      // Remove Selected Colors
-                                                                      svg_colormap.selectAll('rect.addCol').remove();
-                                                                      // Add Color to Dropped Dataset
-                                                                      datasetDrop.push({
-                                                                          lab: rectDrop.data()[0].lab,
-                                                                          name: rectDrop.data()[0].name,
-                                                                          fill: rectDrop.data()[0].fill
-                                                                      });
-                                                                      // Draw Added Colors
-                                                                      svg_colormap.selectAll('rect.dropCol')
-                                                                                  .data(datasetDrop)
-                                                                                  .enter()
-                                                                                  .append('rect')
-                                                                                  .attr('class', 'dropCol')
-                                                                                  .attr('index', function(d, i) { return i; })
-                                                                                  .attr('x', function(d,i) { return 10 + i * 60; })
-                                                                                  .attr('y', 20)
-                                                                                  .attr('width', 50)
-                                                                                  .attr('height', 55)
-                                                                                  .attr('fill', function(d) { return d.fill; })
-                                                                                  .attr('stroke', '#000')
-                                                                      drawColorSearchBox();
-                                                                      svg_colormap.selectAll('text.sliderText').remove();
-                                                                  }
-                                                                  else {
-                                                                      svg_colormap.selectAll('rect.addCol').remove();
-                                                                      drawColorSearchBox();
-                                                                  }
+                                              svg_colormap.selectAll('rect.hoverCol').remove();
+                                              // Change Border Thickness
+                                              rectDrop.attr('stroke-width', 1);
+                                              svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
+                                              // Get Drop-off Mouse Co-Ordinates
+                                              var dropMouse = d3.mouse(rectDrop.node());
+                                              // var xTest = d3.event.x;
+                                              // var yTest = d3.event.y - 85;
+                                              // var ptTest = [xTest, yTest];
+                                              var ptTest = [dropMouse[0], dropMouse[1]];
+                                              // Stop Mouse Events
+                                              d3.select(document)
+                                                  .on('mousemove', null)
+                                                  .on('mouseup', null);
+                                              if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
+                                                  // Update Selected Color Dataset using Index
+                                                  var idDrop = rectDrop.attr('index');
+                                                  datasetSel.splice(idDrop,1);
+                                                  // Remove Selected Colors
+                                                  svg_colormap.selectAll('rect.addCol').remove();
+                                                  // Add Color to Dropped Dataset
+                                                  var canWd = d3.select('rect.dropCanvas').attr('width')
+                                                  var dropPos = Math.floor(paletteLen * ptTest[0]/canWd);
+                                                  var dropX = dropPos * (canWd/paletteLen);
+                                                  var dropWd = Math.ceil(paletteLen * ptTest[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                  var dropRect = ({
+                                                      lab: rectDrop.data()[0].lab,
+                                                      name: rectDrop.data()[0].name,
+                                                      fill: rectDrop.data()[0].fill,
+                                                      RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                      LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                      sel: 1
+                                                  });
+                                                  function drawDropCol() {
+                                                      // Draw Added Colors
+                                                      svg_colormap.append('rect')
+                                                                  .attr('class', 'dropCol')
+                                                                  .attr('x', dropX)
+                                                                  .attr('y', 10)
+                                                                  .attr('width', dropWd)
+                                                                  .attr('height', 75)
+                                                                  .attr('fill', dropRect.fill)
+                                                                  .attr('stroke', '#000')
+                                                                  .on('click', function() {
+                                                                      d3.selectAll('rect.widgBox').remove();
+                                                                      d3.selectAll('rect.widgCol').remove();
+                                                                      d3.selectAll('text#faClose').remove();
+                                                                      // Widget Box
+                                                                      svg_colormap.append('rect')
+                                                                                  .attr('class', 'widgBox')
+                                                                                  .attr('x', function() { 
+                                                                                      if(dropPos < 5) {
+                                                                                          return dropX;
+                                                                                      }
+                                                                                      else {
+                                                                                          return dropX - 75;
+                                                                                      }
+                                                                                  })
+                                                                                  .attr('y', 95)
+                                                                                  .attr('width', 175)
+                                                                                  .attr('height', 115)
+                                                                                  .attr('fill', "#FFF")
+                                                                                  .attr('stroke', '#000');
+              
+                                                                      // Close Widget Button
+                                                                      svg_colormap.append('text')
+                                                                                  .attr('x', function() { 
+                                                                                      if(dropPos < 5) {
+                                                                                          return dropX + 175;
+                                                                                      }
+                                                                                      else {
+                                                                                          return dropX + 100;
+                                                                                      }
+                                                                                  })
+                                                                                  .attr('y', 95)
+                                                                                  .attr('class', 'fa')
+                                                                                  .attr('id', 'faClose')
+                                                                                  .text('\uf00d')
+                                                                                  .attr('fill', '#222021')
+                                                                                  .on('mouseover', function() {
+                                                                                      d3.select(this).attr('fill', '#800000')
+                                                                                  })
+                                                                                  .on('mouseout', function() {
+                                                                                      d3.select(this).attr('fill', '#222021')
+                                                                                  })
+                                                                                  .on('click', function() {
+                                                                                      d3.selectAll('rect.widgBox').remove();
+                                                                                      d3.selectAll('rect.widgCol').remove();
+                                                                                      d3.selectAll('text#faClose').remove();
+                                                                                  })
+                                                                                  .append('title').text('Close Widget');
+              
+                                                                      // Selected Color
+                                                                      var currDrop = d3.select(this);
+                                                                      var currHSL = d3.hsl(currDrop.attr('fill'));
+                                                                      // Widget Colors
+                                                                      for(i=0; i<1.25; i+=0.25) {
+                                                                          for(j=0.25; j<1; j+=0.25) {
+                                                                              currHSL.s = currHSL.s * i;
+                                                                              currHSL.l = currHSL.l * j;
+                                                                              svg_colormap.append('rect')
+                                                                                          .attr('class', 'widgCol')
+                                                                                          .attr('x', function() { 
+                                                                                              if(dropPos < 5) {
+                                                                                                  return (10 + dropX) + i*125;
+                                                                                              }
+                                                                                              else {
+                                                                                                  return (10 + dropX - 75) + i*125;
+                                                                                              }
+                                                                                          })
+                                                                                          .attr('y', 75 + j*125)
+                                                                                          .attr('width', 25)
+                                                                                          .attr('height', 25)
+                                                                                          .attr('fill', currHSL)
+                                                                                          .attr('stroke', '#000')
+                                                                                          .attr('stroke-width', 1)
+                                                                                          .on('mouseover', function() {
+                                                                                              var moCol = d3.select(this);
+                                                                                              moCol.attr('stroke-width', 3);
+                                                                                          })
+                                                                                          .on('mouseout', function() {
+                                                                                              var moCol = d3.select(this);
+                                                                                              moCol.attr('stroke-width', 1);
+                                                                                          })
+                                                                                          .on('click', function() {
+                                                                                              var moCol = d3.select(this);
+                                                                                              dropRect = ({
+                                                                                                  lab: 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5),
+                                                                                                  name: termDistribution(moCol.attr('fill'))[0].term,
+                                                                                                  fill: moCol.attr('fill'),
+                                                                                                  RGB: [moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]],
+                                                                                                  LAB: [5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5)],
+                                                                                                  sel: 1
+                                                                                              });
+                                                                                              datasetDrop.splice(dropPos, 1, dropRect);
+                                                                                              d3.selectAll('rect.widgBox').remove();
+                                                                                              d3.selectAll('rect.widgCol').remove();
+                                                                                              d3.selectAll('text#faClose').remove();
+                                                                                              drawDropCol();
+                                                                                              calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                                                                          });
+                                                                              currHSL.s = 1;
+                                                                              currHSL.l = 1;
+                                                                          }
+                                                                      }
+                                                                  });
+                                                  }
+                                                  drawDropCol();
+                                                  drawColorSearchBox();
+                                                  svg_colormap.selectAll('text.sliderText').remove();
+              
+                                                  if(countDrop == 0) {
+                                                      datasetDrop.push(dropRect);
+                                                      drawColormap(datasetDrop);
+                                                      
+                                                      countDrop++;
+                                                      for(var k=0; k<(paletteLen-1);k++) {
+                                                          datasetDrop.push({
+                                                              lab: rectDrop.data()[0].lab,
+                                                              name: rectDrop.data()[0].name,
+                                                              fill: rectDrop.data()[0].fill,
+                                                              RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                              LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                              sel: 0
+                                                          });
+                                                      }
+                                                      const element = datasetDrop.splice(0, 1)[0];
+                                                      datasetDrop.splice(dropPos, 0, element);
+                                                  }
+                                                  else {
+                                                      var tempRect = ({
+                                                          lab: rectDrop.data()[0].lab,
+                                                          name: rectDrop.data()[0].name,
+                                                          fill: rectDrop.data()[0].fill,
+                                                          RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                          LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                          sel: 1
+                                                      });
+                                                      datasetDrop.splice(dropPos, 1, tempRect);
+                                                  }
+                                                  calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                              }
+                                              else {
+                                                  svg_colormap.selectAll('rect.addCol').remove();
+                                                  drawColorSearchBox();
+                                              }
                                           })
                                       });
                           }
@@ -567,7 +953,10 @@ function hoverTerm(term) {
                         datasetSel.push({
                           lab: d3.select(this).attr('index'),
                           name: d3.select(this).attr('title'),
-                          fill: d3.select(this).attr('fill')
+                          fill: d3.select(this).attr('fill'),
+                          RGB: [d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).b],
+                          LAB: [d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).L, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).a, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).b],
+                          sel: 1
                         })
                         function drawColorHover() {
                           svg_colormap.selectAll('rect.addCol')
@@ -602,60 +991,250 @@ function hoverTerm(term) {
                                         var rectDrop = d3.select(this);
                                         // Change Border Thickness
                                         rectDrop.attr('stroke-width', 5);
+                                        var selMouse = d3.mouse(rectDrop.node());
+                                        var selCoord = [
+                                            +d3.select(this).attr('x'), +d3.select(this).attr('y')
+                                        ];
                                         
                                         // Move Rectangle
                                         d3.select(document).on('mousemove', function() {
-                                                                // Get Mouse Co-Ordinates
-                                                                rectDrop.attr('x', d3.event.x)
-                                                                        .attr('y', d3.event.y - 85);
-                                                                // Add Color to Slider Canvas
-                                                                svg_colormap.select('rect.dropCanvas').attr('fill', '#FFD0D0').attr('opacity', 0.5);
+                                            // Get Mouse Co-Ordinates
+                                            var newMouse = d3.mouse(rectDrop.node());
+                                            var delMouse = [
+                                                newMouse[0]-selMouse[0], newMouse[1]-selMouse[1]
+                                            ];
+                                            rectDrop.attr('x', selCoord[0] + delMouse[0])
+                                                    .attr('y', selCoord[1] + delMouse[1]);
+            
+                                            // Add Color to Slider Canvas
+                                            svg_colormap.select('rect.dropCanvas').attr('fill', '#FAE6E6').attr('opacity', 0.2);
+            
+                                            if(contains(svg_colormap.select('rect.dropCanvas'),newMouse) == true) {
+                                                var canWd = d3.select('rect.dropCanvas').attr('width');
+                                                var dropPos = Math.floor(paletteLen * newMouse[0]/canWd);
+                                                var dropX = dropPos * (canWd/paletteLen);
+                                                var dropWd = Math.ceil(paletteLen * newMouse[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                // Draw Added Colors
+                                                svg_colormap.append('rect')
+                                                            .attr('class', 'contCol')
+                                                            .attr('x', dropX)
+                                                            .attr('y', 10)
+                                                            .attr('width', dropWd)
+                                                            .attr('height', 75)
+                                                            .attr('fill', '#FFD0D0')
+                                                            .attr('opacity', 0.05)
+                                                            .attr('stroke', '#000');
+                                                if(contains(svg_colormap.select('rect.contCol'),newMouse) == true) {
+                                                    // Draw Added Colors
+                                                    svg_colormap.append('rect')
+                                                                .attr('class', 'hoverCol')
+                                                                .attr('x', dropX)
+                                                                .attr('y', 10)
+                                                                .attr('width', dropWd)
+                                                                .attr('height', 75)
+                                                                .attr('fill', '#FFD0D0')
+                                                                .attr('opacity', 0.05)
+                                                                .attr('stroke', '#000');
+                                                }
+                                                else {
+                                                    svg_colormap.selectAll('rect.contCol').remove();
+                                                    svg_colormap.selectAll('rect.hoverCol').remove();
+                                                }
+                                            }
+                                            else {
+                                                svg_colormap.selectAll('rect.contCol').remove();
+                                                svg_colormap.selectAll('rect.hoverCol').remove();
+                                            }
+                                            svg_colormap.select('rect.dropCanvas').attr('opacity', 1);
                                         })
             
                                         d3.select(document).on('mouseup', function() {
-                                                                // Change Border Thickness
-                                                                rectDrop.attr('stroke-width', 1);
-                                                                svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
-                                                                // Get Drop-off Mouse Co-Ordinates
-                                                                var xTest = d3.event.x;
-                                                                var yTest = d3.event.y - 85;
-                                                                var ptTest = [xTest, yTest];
-                                                                // Stop Mouse Events
-                                                                d3.select(document)
-                                                                    .on('mousemove', null)
-                                                                    .on('mouseup', null);
-                                                                if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
-                                                                    // Update Selected Color Dataset using Index
-                                                                    var idDrop = rectDrop.attr('index');
-                                                                    datasetSel.splice(idDrop,1);
-                                                                    // Remove Selected Colors
-                                                                    svg_colormap.selectAll('rect.addCol').remove();
-                                                                    // Add Color to Dropped Dataset
-                                                                    datasetDrop.push({
-                                                                        lab: rectDrop.data()[0].lab,
-                                                                        name: rectDrop.data()[0].name,
-                                                                        fill: rectDrop.data()[0].fill
-                                                                    });
-                                                                    // Draw Added Colors
-                                                                    svg_colormap.selectAll('rect.dropCol')
-                                                                                .data(datasetDrop)
-                                                                                .enter()
-                                                                                .append('rect')
-                                                                                .attr('class', 'dropCol')
-                                                                                .attr('index', function(d, i) { return i; })
-                                                                                .attr('x', function(d,i) { return 10 + i * 60; })
-                                                                                .attr('y', 20)
-                                                                                .attr('width', 50)
-                                                                                .attr('height', 55)
-                                                                                .attr('fill', function(d) { return d.fill; })
-                                                                                .attr('stroke', '#000')
-                                                                    drawColorHover();
-                                                                    svg_colormap.selectAll('text.sliderText').remove();
-                                                                }
-                                                                else {
-                                                                    svg_colormap.selectAll('rect.addCol').remove();
-                                                                    drawColorHover();
-                                                                }
+                                            svg_colormap.selectAll('rect.hoverCol').remove();
+                                            // Change Border Thickness
+                                            rectDrop.attr('stroke-width', 1);
+                                            svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
+                                            // Get Drop-off Mouse Co-Ordinates
+                                            var dropMouse = d3.mouse(rectDrop.node());
+                                            // var xTest = d3.event.x;
+                                            // var yTest = d3.event.y - 85;
+                                            // var ptTest = [xTest, yTest];
+                                            var ptTest = [dropMouse[0], dropMouse[1]];
+                                            // Stop Mouse Events
+                                            d3.select(document)
+                                                .on('mousemove', null)
+                                                .on('mouseup', null);
+                                            if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
+                                                // Update Selected Color Dataset using Index
+                                                var idDrop = rectDrop.attr('index');
+                                                datasetSel.splice(idDrop,1);
+                                                // Remove Selected Colors
+                                                svg_colormap.selectAll('rect.addCol').remove();
+                                                // Add Color to Dropped Dataset
+                                                var canWd = d3.select('rect.dropCanvas').attr('width')
+                                                var dropPos = Math.floor(paletteLen * ptTest[0]/canWd);
+                                                var dropX = dropPos * (canWd/paletteLen);
+                                                var dropWd = Math.ceil(paletteLen * ptTest[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                var dropRect = ({
+                                                    lab: rectDrop.data()[0].lab,
+                                                    name: rectDrop.data()[0].name,
+                                                    fill: rectDrop.data()[0].fill,
+                                                    RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                    LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                    sel: 1
+                                                });
+                                                function drawDropCol() {
+                                                    // Draw Added Colors
+                                                    svg_colormap.append('rect')
+                                                                .attr('class', 'dropCol')
+                                                                .attr('x', dropX)
+                                                                .attr('y', 10)
+                                                                .attr('width', dropWd)
+                                                                .attr('height', 75)
+                                                                .attr('fill', dropRect.fill)
+                                                                .attr('stroke', '#000')
+                                                                .on('click', function() {
+                                                                    d3.selectAll('rect.widgBox').remove();
+                                                                    d3.selectAll('rect.widgCol').remove();
+                                                                    d3.selectAll('text#faClose').remove();
+                                                                    // Widget Box
+                                                                    svg_colormap.append('rect')
+                                                                                .attr('class', 'widgBox')
+                                                                                .attr('x', function() { 
+                                                                                    if(dropPos < 5) {
+                                                                                        return dropX;
+                                                                                    }
+                                                                                    else {
+                                                                                        return dropX - 75;
+                                                                                    }
+                                                                                })
+                                                                                .attr('y', 95)
+                                                                                .attr('width', 175)
+                                                                                .attr('height', 115)
+                                                                                .attr('fill', "#FFF")
+                                                                                .attr('stroke', '#000');
+            
+                                                                    // Close Widget Button
+                                                                    svg_colormap.append('text')
+                                                                                .attr('x', function() { 
+                                                                                    if(dropPos < 5) {
+                                                                                        return dropX + 175;
+                                                                                    }
+                                                                                    else {
+                                                                                        return dropX + 100;
+                                                                                    }
+                                                                                })
+                                                                                .attr('y', 95)
+                                                                                .attr('class', 'fa')
+                                                                                .attr('id', 'faClose')
+                                                                                .text('\uf00d')
+                                                                                .attr('fill', '#222021')
+                                                                                .on('mouseover', function() {
+                                                                                    d3.select(this).attr('fill', '#800000')
+                                                                                })
+                                                                                .on('mouseout', function() {
+                                                                                    d3.select(this).attr('fill', '#222021')
+                                                                                })
+                                                                                .on('click', function() {
+                                                                                    d3.selectAll('rect.widgBox').remove();
+                                                                                    d3.selectAll('rect.widgCol').remove();
+                                                                                    d3.selectAll('text#faClose').remove();
+                                                                                })
+                                                                                .append('title').text('Close Widget');
+            
+                                                                    // Selected Color
+                                                                    var currDrop = d3.select(this);
+                                                                    var currHSL = d3.hsl(currDrop.attr('fill'));
+                                                                    // Widget Colors
+                                                                    for(i=0; i<1.25; i+=0.25) {
+                                                                        for(j=0.25; j<1; j+=0.25) {
+                                                                            currHSL.s = currHSL.s * i;
+                                                                            currHSL.l = currHSL.l * j;
+                                                                            svg_colormap.append('rect')
+                                                                                        .attr('class', 'widgCol')
+                                                                                        .attr('x', function() { 
+                                                                                            if(dropPos < 5) {
+                                                                                                return (10 + dropX) + i*125;
+                                                                                            }
+                                                                                            else {
+                                                                                                return (10 + dropX - 75) + i*125;
+                                                                                            }
+                                                                                        })
+                                                                                        .attr('y', 75 + j*125)
+                                                                                        .attr('width', 25)
+                                                                                        .attr('height', 25)
+                                                                                        .attr('fill', currHSL)
+                                                                                        .attr('stroke', '#000')
+                                                                                        .attr('stroke-width', 1)
+                                                                                        .on('mouseover', function() {
+                                                                                            var moCol = d3.select(this);
+                                                                                            moCol.attr('stroke-width', 3);
+                                                                                        })
+                                                                                        .on('mouseout', function() {
+                                                                                            var moCol = d3.select(this);
+                                                                                            moCol.attr('stroke-width', 1);
+                                                                                        })
+                                                                                        .on('click', function() {
+                                                                                            var moCol = d3.select(this);
+                                                                                            dropRect = ({
+                                                                                                lab: 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5),
+                                                                                                name: termDistribution(moCol.attr('fill'))[0].term,
+                                                                                                fill: moCol.attr('fill'),
+                                                                                                RGB: [moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]],
+                                                                                                LAB: [5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5)],
+                                                                                                sel: 1
+                                                                                            });
+                                                                                            datasetDrop.splice(dropPos, 1, dropRect);
+                                                                                            d3.selectAll('rect.widgBox').remove();
+                                                                                            d3.selectAll('rect.widgCol').remove();
+                                                                                            d3.selectAll('text#faClose').remove();
+                                                                                            drawDropCol();
+                                                                                            calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                                                                        });
+                                                                            currHSL.s = 1;
+                                                                            currHSL.l = 1;
+                                                                        }
+                                                                    }
+                                                                });
+                                                }
+                                                drawDropCol();
+                                                drawColorHover();
+                                                svg_colormap.selectAll('text.sliderText').remove();
+            
+                                                if(countDrop == 0) {
+                                                    datasetDrop.push(dropRect);
+                                                    drawColormap(datasetDrop);
+                                                    
+                                                    countDrop++;
+                                                    for(var k=0; k<(paletteLen-1);k++) {
+                                                        datasetDrop.push({
+                                                            lab: rectDrop.data()[0].lab,
+                                                            name: rectDrop.data()[0].name,
+                                                            fill: rectDrop.data()[0].fill,
+                                                            RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                            LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                            sel: 0
+                                                        });
+                                                    }
+                                                    const element = datasetDrop.splice(0, 1)[0];
+                                                    datasetDrop.splice(dropPos, 0, element);
+                                                }
+                                                else {
+                                                    var tempRect = ({
+                                                        lab: rectDrop.data()[0].lab,
+                                                        name: rectDrop.data()[0].name,
+                                                        fill: rectDrop.data()[0].fill,
+                                                        RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                        LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                        sel: 1
+                                                    });
+                                                    datasetDrop.splice(dropPos, 1, tempRect);
+                                                }
+                                                calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                            }
+                                            else {
+                                                svg_colormap.selectAll('rect.addCol').remove();
+                                                drawColorHover();
+                                            }
                                         })
                                     });
                         }
@@ -737,7 +1316,10 @@ function hoverTerm(term) {
                         datasetSel.push({
                           lab: d3.select(this).attr('index'),
                           name: d3.select(this).attr('title'),
-                          fill: d3.select(this).attr('fill')
+                          fill: d3.select(this).attr('fill'),
+                          RGB: [d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2])).b],
+                          LAB: [d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).L, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).a, d3.lab(d3.select(this).attr('index').split(",").map(x=>+x)[0],d3.select(this).attr('index').split(",").map(x=>+x)[1],d3.select(this).attr('index').split(",").map(x=>+x)[2]).b],
+                          sel: 1
                         })
                         function drawColorHoverBox() {
                           svg_colormap.selectAll('rect.addCol')
@@ -772,60 +1354,250 @@ function hoverTerm(term) {
                                         var rectDrop = d3.select(this);
                                         // Change Border Thickness
                                         rectDrop.attr('stroke-width', 5);
+                                        var selMouse = d3.mouse(rectDrop.node());
+                                        var selCoord = [
+                                            +d3.select(this).attr('x'), +d3.select(this).attr('y')
+                                        ];
                                         
                                         // Move Rectangle
                                         d3.select(document).on('mousemove', function() {
-                                                                // Get Mouse Co-Ordinates
-                                                                rectDrop.attr('x', d3.event.x)
-                                                                        .attr('y', d3.event.y - 85);
-                                                                // Add Color to Slider Canvas
-                                                                svg_colormap.select('rect.dropCanvas').attr('fill', '#FFD0D0').attr('opacity', 0.5);
+                                            // Get Mouse Co-Ordinates
+                                            var newMouse = d3.mouse(rectDrop.node());
+                                            var delMouse = [
+                                                newMouse[0]-selMouse[0], newMouse[1]-selMouse[1]
+                                            ];
+                                            rectDrop.attr('x', selCoord[0] + delMouse[0])
+                                                    .attr('y', selCoord[1] + delMouse[1]);
+            
+                                            // Add Color to Slider Canvas
+                                            svg_colormap.select('rect.dropCanvas').attr('fill', '#FAE6E6').attr('opacity', 0.2);
+            
+                                            if(contains(svg_colormap.select('rect.dropCanvas'),newMouse) == true) {
+                                                var canWd = d3.select('rect.dropCanvas').attr('width');
+                                                var dropPos = Math.floor(paletteLen * newMouse[0]/canWd);
+                                                var dropX = dropPos * (canWd/paletteLen);
+                                                var dropWd = Math.ceil(paletteLen * newMouse[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                // Draw Added Colors
+                                                svg_colormap.append('rect')
+                                                            .attr('class', 'contCol')
+                                                            .attr('x', dropX)
+                                                            .attr('y', 10)
+                                                            .attr('width', dropWd)
+                                                            .attr('height', 75)
+                                                            .attr('fill', '#FFD0D0')
+                                                            .attr('opacity', 0.05)
+                                                            .attr('stroke', '#000');
+                                                if(contains(svg_colormap.select('rect.contCol'),newMouse) == true) {
+                                                    // Draw Added Colors
+                                                    svg_colormap.append('rect')
+                                                                .attr('class', 'hoverCol')
+                                                                .attr('x', dropX)
+                                                                .attr('y', 10)
+                                                                .attr('width', dropWd)
+                                                                .attr('height', 75)
+                                                                .attr('fill', '#FFD0D0')
+                                                                .attr('opacity', 0.05)
+                                                                .attr('stroke', '#000');
+                                                }
+                                                else {
+                                                    svg_colormap.selectAll('rect.contCol').remove();
+                                                    svg_colormap.selectAll('rect.hoverCol').remove();
+                                                }
+                                            }
+                                            else {
+                                                svg_colormap.selectAll('rect.contCol').remove();
+                                                svg_colormap.selectAll('rect.hoverCol').remove();
+                                            }
+                                            svg_colormap.select('rect.dropCanvas').attr('opacity', 1);
                                         })
             
                                         d3.select(document).on('mouseup', function() {
-                                                                // Change Border Thickness
-                                                                rectDrop.attr('stroke-width', 1);
-                                                                svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
-                                                                // Get Drop-off Mouse Co-Ordinates
-                                                                var xTest = d3.event.x;
-                                                                var yTest = d3.event.y - 85;
-                                                                var ptTest = [xTest, yTest];
-                                                                // Stop Mouse Events
-                                                                d3.select(document)
-                                                                    .on('mousemove', null)
-                                                                    .on('mouseup', null);
-                                                                if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
-                                                                    // Update Selected Color Dataset using Index
-                                                                    var idDrop = rectDrop.attr('index');
-                                                                    datasetSel.splice(idDrop,1);
-                                                                    // Remove Selected Colors
-                                                                    svg_colormap.selectAll('rect.addCol').remove();
-                                                                    // Add Color to Dropped Dataset
-                                                                    datasetDrop.push({
-                                                                        lab: rectDrop.data()[0].lab,
-                                                                        name: rectDrop.data()[0].name,
-                                                                        fill: rectDrop.data()[0].fill
-                                                                    });
-                                                                    // Draw Added Colors
-                                                                    svg_colormap.selectAll('rect.dropCol')
-                                                                                .data(datasetDrop)
-                                                                                .enter()
-                                                                                .append('rect')
-                                                                                .attr('class', 'dropCol')
-                                                                                .attr('index', function(d, i) { return i; })
-                                                                                .attr('x', function(d,i) { return 10 + i * 60; })
-                                                                                .attr('y', 20)
-                                                                                .attr('width', 50)
-                                                                                .attr('height', 55)
-                                                                                .attr('fill', function(d) { return d.fill; })
-                                                                                .attr('stroke', '#000')
-                                                                    drawColorHoverBox();
-                                                                    svg_colormap.selectAll('text.sliderText').remove();
-                                                                }
-                                                                else {
-                                                                    svg_colormap.selectAll('rect.addCol').remove();
-                                                                    drawColorHoverBox();
-                                                                }
+                                            svg_colormap.selectAll('rect.hoverCol').remove();
+                                            // Change Border Thickness
+                                            rectDrop.attr('stroke-width', 1);
+                                            svg_colormap.select('rect.dropCanvas').attr('fill', '#F5F5F5');
+                                            // Get Drop-off Mouse Co-Ordinates
+                                            var dropMouse = d3.mouse(rectDrop.node());
+                                            // var xTest = d3.event.x;
+                                            // var yTest = d3.event.y - 85;
+                                            // var ptTest = [xTest, yTest];
+                                            var ptTest = [dropMouse[0], dropMouse[1]];
+                                            // Stop Mouse Events
+                                            d3.select(document)
+                                                .on('mousemove', null)
+                                                .on('mouseup', null);
+                                            if(contains(svg_colormap.select('rect.dropCanvas'),ptTest) == true) {
+                                                // Update Selected Color Dataset using Index
+                                                var idDrop = rectDrop.attr('index');
+                                                datasetSel.splice(idDrop,1);
+                                                // Remove Selected Colors
+                                                svg_colormap.selectAll('rect.addCol').remove();
+                                                // Add Color to Dropped Dataset
+                                                var canWd = d3.select('rect.dropCanvas').attr('width')
+                                                var dropPos = Math.floor(paletteLen * ptTest[0]/canWd);
+                                                var dropX = dropPos * (canWd/paletteLen);
+                                                var dropWd = Math.ceil(paletteLen * ptTest[0]/canWd) * (canWd/paletteLen) - dropX;
+                                                var dropRect = ({
+                                                    lab: rectDrop.data()[0].lab,
+                                                    name: rectDrop.data()[0].name,
+                                                    fill: rectDrop.data()[0].fill,
+                                                    RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                    LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                    sel: 1
+                                                });
+                                                function drawDropCol() {
+                                                    // Draw Added Colors
+                                                    svg_colormap.append('rect')
+                                                                .attr('class', 'dropCol')
+                                                                .attr('x', dropX)
+                                                                .attr('y', 10)
+                                                                .attr('width', dropWd)
+                                                                .attr('height', 75)
+                                                                .attr('fill', dropRect.fill)
+                                                                .attr('stroke', '#000')
+                                                                .on('click', function() {
+                                                                    d3.selectAll('rect.widgBox').remove();
+                                                                    d3.selectAll('rect.widgCol').remove();
+                                                                    d3.selectAll('text#faClose').remove();
+                                                                    // Widget Box
+                                                                    svg_colormap.append('rect')
+                                                                                .attr('class', 'widgBox')
+                                                                                .attr('x', function() { 
+                                                                                    if(dropPos < 5) {
+                                                                                        return dropX;
+                                                                                    }
+                                                                                    else {
+                                                                                        return dropX - 75;
+                                                                                    }
+                                                                                })
+                                                                                .attr('y', 95)
+                                                                                .attr('width', 175)
+                                                                                .attr('height', 115)
+                                                                                .attr('fill', "#FFF")
+                                                                                .attr('stroke', '#000');
+            
+                                                                    // Close Widget Button
+                                                                    svg_colormap.append('text')
+                                                                                .attr('x', function() { 
+                                                                                    if(dropPos < 5) {
+                                                                                        return dropX + 175;
+                                                                                    }
+                                                                                    else {
+                                                                                        return dropX + 100;
+                                                                                    }
+                                                                                })
+                                                                                .attr('y', 95)
+                                                                                .attr('class', 'fa')
+                                                                                .attr('id', 'faClose')
+                                                                                .text('\uf00d')
+                                                                                .attr('fill', '#222021')
+                                                                                .on('mouseover', function() {
+                                                                                    d3.select(this).attr('fill', '#800000')
+                                                                                })
+                                                                                .on('mouseout', function() {
+                                                                                    d3.select(this).attr('fill', '#222021')
+                                                                                })
+                                                                                .on('click', function() {
+                                                                                    d3.selectAll('rect.widgBox').remove();
+                                                                                    d3.selectAll('rect.widgCol').remove();
+                                                                                    d3.selectAll('text#faClose').remove();
+                                                                                })
+                                                                                .append('title').text('Close Widget');
+            
+                                                                    // Selected Color
+                                                                    var currDrop = d3.select(this);
+                                                                    var currHSL = d3.hsl(currDrop.attr('fill'));
+                                                                    // Widget Colors
+                                                                    for(i=0; i<1.25; i+=0.25) {
+                                                                        for(j=0.25; j<1; j+=0.25) {
+                                                                            currHSL.s = currHSL.s * i;
+                                                                            currHSL.l = currHSL.l * j;
+                                                                            svg_colormap.append('rect')
+                                                                                        .attr('class', 'widgCol')
+                                                                                        .attr('x', function() { 
+                                                                                            if(dropPos < 5) {
+                                                                                                return (10 + dropX) + i*125;
+                                                                                            }
+                                                                                            else {
+                                                                                                return (10 + dropX - 75) + i*125;
+                                                                                            }
+                                                                                        })
+                                                                                        .attr('y', 75 + j*125)
+                                                                                        .attr('width', 25)
+                                                                                        .attr('height', 25)
+                                                                                        .attr('fill', currHSL)
+                                                                                        .attr('stroke', '#000')
+                                                                                        .attr('stroke-width', 1)
+                                                                                        .on('mouseover', function() {
+                                                                                            var moCol = d3.select(this);
+                                                                                            moCol.attr('stroke-width', 3);
+                                                                                        })
+                                                                                        .on('mouseout', function() {
+                                                                                            var moCol = d3.select(this);
+                                                                                            moCol.attr('stroke-width', 1);
+                                                                                        })
+                                                                                        .on('click', function() {
+                                                                                            var moCol = d3.select(this);
+                                                                                            dropRect = ({
+                                                                                                lab: 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5) + "," + 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5),
+                                                                                                name: termDistribution(moCol.attr('fill'))[0].term,
+                                                                                                fill: moCol.attr('fill'),
+                                                                                                RGB: [moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]],
+                                                                                                LAB: [5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).L)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a)/5), 5 * Math.round((d3.lab(d3.rgb(moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], moCol.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)/5)],
+                                                                                                sel: 1
+                                                                                            });
+                                                                                            datasetDrop.splice(dropPos, 1, dropRect);
+                                                                                            d3.selectAll('rect.widgBox').remove();
+                                                                                            d3.selectAll('rect.widgCol').remove();
+                                                                                            d3.selectAll('text#faClose').remove();
+                                                                                            drawDropCol();
+                                                                                            calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                                                                        });
+                                                                            currHSL.s = 1;
+                                                                            currHSL.l = 1;
+                                                                        }
+                                                                    }
+                                                                });
+                                                }
+                                                drawDropCol();
+                                                drawColorHoverBox();
+                                                svg_colormap.selectAll('text.sliderText').remove();
+            
+                                                if(countDrop == 0) {
+                                                    datasetDrop.push(dropRect);
+                                                    drawColormap(datasetDrop);
+                                                    
+                                                    countDrop++;
+                                                    for(var k=0; k<(paletteLen-1);k++) {
+                                                        datasetDrop.push({
+                                                            lab: rectDrop.data()[0].lab,
+                                                            name: rectDrop.data()[0].name,
+                                                            fill: rectDrop.data()[0].fill,
+                                                            RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                            LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                            sel: 0
+                                                        });
+                                                    }
+                                                    const element = datasetDrop.splice(0, 1)[0];
+                                                    datasetDrop.splice(dropPos, 0, element);
+                                                }
+                                                else {
+                                                    var tempRect = ({
+                                                        lab: rectDrop.data()[0].lab,
+                                                        name: rectDrop.data()[0].name,
+                                                        fill: rectDrop.data()[0].fill,
+                                                        RGB: [d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b],
+                                                        LAB: [d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).L, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b],
+                                                        sel: 1
+                                                    });
+                                                    datasetDrop.splice(dropPos, 1, tempRect);
+                                                }
+                                                calcPalette(paletteLen, val_lum[0], val_lum[1]);
+                                            }
+                                            else {
+                                                svg_colormap.selectAll('rect.addCol').remove();
+                                                drawColorHoverBox();
+                                            }
                                         })
                                     });
                         }
