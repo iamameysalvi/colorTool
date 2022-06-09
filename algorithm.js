@@ -1,21 +1,21 @@
-function drawSimCol(data) {
-    // Draw Simulated Colors
-    for(var i=0; i<paletteLen; i++) {
-        if(data[i].sel == 0) {
-            var canWd = d3.select('rect.dropCanvas').attr('width')
-            var simX = i * (canWd/paletteLen);
-            var simWd = (canWd/paletteLen)/2;
-            svg_colormap.append('rect')
-                        .attr('class', 'simCol')
-                        .attr('x', simX + simWd/2)
-                        .attr('y', 27.5)
-                        .attr('width', simWd)
-                        .attr('height', 37.5)
-                        .attr('fill', data[i].fill)
-                        .attr('stroke', '#000');
-        }
-    }
-}
+// function drawSimCol(data) {
+//     // Draw Simulated Colors
+//     for(var i=0; i<paletteLen; i++) {
+//         if(data[i].sel == 0) {
+//             var canWd = d3.select('rect.dropCanvas').attr('width')
+//             var simX = i * (canWd/paletteLen);
+//             var simWd = (canWd/paletteLen)/2;
+//             svg_colormap.append('rect')
+//                         .attr('class', 'simCol')
+//                         .attr('x', simX + simWd/2)
+//                         .attr('y', 27.5)
+//                         .attr('width', simWd)
+//                         .attr('height', 37.5)
+//                         .attr('fill', data[i].fill)
+//                         .attr('stroke', '#000');
+//         }
+//     }
+// }
 function calcPalette(palSize, minl, maxl) {
     // Size of the Palette
     var palette_size = palSize;
@@ -28,7 +28,7 @@ function calcPalette(palSize, minl, maxl) {
     }
     drawColormap(palette);
     drawLinegraph(palette);
-    drawSimCol(palette);
+    // drawSimCol(palette);
 }
 // LAB Color Generator
 function generate() {
@@ -357,7 +357,7 @@ function simulatedAnnealing2FindBestPalette(size, evaluateFunc, minl, maxl) {
                 if (preferredObj.score - o.score < 0) {
                     preferredObj = o;
                     datasetTop.push(preferredObj);
-                    console.log(preferredObj);
+                    // console.log(preferredObj);
                 }
             }
             // if (iterate_times > max_iteration_times) {
