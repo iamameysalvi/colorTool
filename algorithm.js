@@ -87,7 +87,7 @@ function evalPalette(palette, col_len, minl, maxl) {
     var lum_max = maxl;
     var lum_fin = 0;
 
-    for(var i = 0; i < sample_sal; i++) {
+    for(var i = 0; i < sample_sal; i++) { 
         var samp_lum = i/(sample_sal-1);
         var lum_curr = d3.lab(colormap.mapValue(samp_lum)).L;
 
@@ -250,35 +250,40 @@ function evalPalette(palette, col_len, minl, maxl) {
 
     // Weights
     if(lumRadio == 'linear') {
-        // Slider weights changes
-        var wSal = val_salSimL;
-        var wLD = val_ldSimL;
-        var wPU = val_puSimL;
-        var wLBO = val_lboSimL;
-        var wSmo = val_smoSimL;
+        // // Slider weights changes
+        // var wSal = val_salSimL;
+        // var wLD = val_ldSimL;
+        // var wPU = val_puSimL;
+        // var wLBO = val_lboSimL;
+        // var wSmo = val_smoSimL;
         
-        // // Manual weights changes
-        // var wSal = 10;
+        // Manual weights changes
+        // var wSal = 100;
         // var wLD = -100000;
         // var wPU = -1000;
-        // var wLBO = -100;
+        // var wLBO = -500;
         // var wSmo = 200;
+        var wSal = 100;
+        var wLD = -1000000;
+        var wPU = -5000;
+        var wLBO = -500;
+        var wSmo = 2000;
     }
     // Diverging
     else if (lumRadio == 'diverging') {
-        // Slider weights changes
-        var wSal = val_salSimD;
-        var wLD = val_ldSimD;
-        var wPU = val_puSimD;
-        var wLBO = val_lboSimD;
-        var wSmo = val_smoSimD;
+        // // Slider weights changes
+        // var wSal = val_salSimD;
+        // var wLD = val_ldSimD;
+        // var wPU = val_puSimD;
+        // var wLBO = val_lboSimD;
+        // var wSmo = val_smoSimD;
 
-        // // Manual weights changes
-        // var wSal = 40;
-        // var wLD = -100000;
-        // var wPU = -100;
-        // var wLBO = -500;
-        // var wSmo = 100;
+        // Manual weights changes
+        var wSal = 40;
+        var wLD = -100000;
+        var wPU = -10000;
+        var wLBO = -500;
+        var wSmo = 100;
     }
     return (wSal * nSalience) + (wLD * lumDifference) + (wPU * perc_fin) + (wLBO * lbo_val) + (wSmo * angleDiff);
     // return (wLD * lumDifference) + (wPU * perc_fin);
@@ -295,29 +300,51 @@ function randomDisturbColors(palette) {
         // random disturb one color
         var idx = getRandom(0, palette.length - 1);
         var sel_color = palette[idx];
-        // console.log(idx);
 
         if(sel_color.sel == 0) {
             // var sel_color = palette[idx];
-            // Disturb LAB space - small l diff, large a,b diff -> L: -(10,10), a: (-25,25), b: (-25,25)
+            // Disturb LAB space - small l diff, large a,b diff -> L: (-5,5), a: (-25,25), b: (-25,25)
             var new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturb_lstep, disturb_lstep)/5)), sel_color.LAB[1] + getRandom(-disturb_abstep, disturb_abstep), sel_color.LAB[2] + getRandom(-disturb_abstep, disturb_abstep));
-            var lab_new = d3.rgb(new_color);
 
-            // console.log(lab_new);
+            if(new_color.L >= 0 && new_color.L <= 100 && new_color.a >= -128 && new_color.a <= 127 && new_color.b >= -128 && new_color.b <= 127) {
+                var lab_new = d3.rgb(new_color);
 
-
-            if(Math.round(lab_new.r) >= 0 && Math.round(lab_new.g) >= 0 && Math.round(lab_new.b) >= 0 && Math.round(lab_new.r) <= 255 && Math.round(lab_new.g) <= 255 && Math.round(lab_new.b) <= 255) {
-                lab_checked = new_color;
-                rgb_checked = d3.rgb(lab_checked); 
-
-                // Update
-                palette[idx] = {
-                    RGB: [Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)],
-                    LAB: [lab_checked.L,lab_checked.a,lab_checked.b],
-                    fill: "rgb(" + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).g + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).b + ")",
-                    sel: 0
-                    // pts: [lab_checked.a, lab_checked.b]
+                if(Math.round(lab_new.r) >= 0 && Math.round(lab_new.g) >= 0 && Math.round(lab_new.b) >= 0 && Math.round(lab_new.r) <= 255 && Math.round(lab_new.g) <= 255 && Math.round(lab_new.b) <= 255 && Math.round(new_color.L) >= 0 && Math.round(new_color.L) <= 100) {
+                    lab_checked = new_color;
+                    rgb_checked = d3.rgb(lab_checked); 
+    
+                    // Update
+                    palette[idx] = {
+                        RGB: [Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)],
+                        LAB: [lab_checked.L,lab_checked.a,lab_checked.b],
+                        fill: "rgb(" + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).g + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).b + ")",
+                        sel: 0
+                        // pts: [lab_checked.a, lab_checked.b]
+                    }
                 }
+            }
+        }
+        // Change selected colors: Randomize L, keeping a,b same
+        else if(sel_color.sel == 1) {
+            // Disturb LAB space - small l diff, no a,b diff -> L: (-5,5)
+            var new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturb_lstep, disturb_lstep)/5)), sel_color.LAB[1], sel_color.LAB[2]);
+
+            if(new_color.L >= 0 && new_color.L <= 100 && new_color.a >= -128 && new_color.a <= 127 && new_color.b >= -128 && new_color.b <= 127) {
+                var lab_new = d3.rgb(new_color);
+
+                if(Math.round(lab_new.r) >= 0 && Math.round(lab_new.g) >= 0 && Math.round(lab_new.b) >= 0 && Math.round(lab_new.r) <= 255 && Math.round(lab_new.g) <= 255 && Math.round(lab_new.b) <= 255) {
+                    lab_checked = new_color;
+                    rgb_checked = d3.rgb(lab_checked); 
+    
+                    // Update
+                    palette[idx] = {
+                        RGB: [Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)],
+                        LAB: [lab_checked.L,lab_checked.a,lab_checked.b],
+                        fill: "rgb(" + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).g + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).b + ")",
+                        sel: 1
+                        // pts: [lab_checked.a, lab_checked.b]
+                    }
+                }      
             }
         }
     }
