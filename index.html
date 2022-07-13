@@ -28,6 +28,14 @@
         <script src="search.js"></script>
         <script src="slice2D.js"></script>
         <script src="colormap.js"></script>
+<<<<<<< Updated upstream
+=======
+        <script src="algorithm.js"></script>
+        <script src="sidebar.js"></script>
+        <script src="linegraph.js"></script>
+        <!-- <script src="main.js"></script> -->
+        <script src="worker.js"></script>
+>>>>>>> Stashed changes
     </head>
 
     <body class='no-select'>
@@ -37,9 +45,59 @@
             <div class='colormapMain'>
                 <h2><u>COLORMAP</u></h2>
                 <div id='colormap'>
+<<<<<<< Updated upstream
                     <canvas id="canvasMain" width="725" height="65" style="border: solid 1px gray;"></canvas><br>
                 </div>
                 <div class='colorSel' id='colorSel'></div>
+=======
+                    <canvas id='canvasMain' width='740' height='65' style='border: solid 1px gray;'></canvas><br>
+                    <!-- <button type='button' class='iconButton' onclick='calcPalette(paletteLen, val_lum[0], val_lum[1]);' id='replay' value='replay'><i class='material-icons' style='font-size: 2em;'>replay</i> -->
+                    <button type='button' class='iconButton' onclick='functWorker();' id='replay' value='replay'><i class='material-icons' style='font-size: 2em;'>replay</i>
+                        <p>Regenerate</p>
+                    </button>
+                    <div class='loader' id="loader" style="visibility: hidden;"></div>
+                </div>
+                <div class='colorSel' id='colorSel'></div>
+                <!-- LINEGRAPH -->
+                <div class='linesMain' id='linesMain'>
+                    <!-- <select id='lineButton' name='lineButton' class="lineButton" onchange='drawLinegraph(datasetDrop)'>
+                        <option value='Luminance'>Luminance</option>
+                        <option value='Saliency'>Saliency</option>
+                        <option value='CIE00 Distance'>CIE00 Distance</option>
+                        <option value='Name Difference'>Name Difference</option>
+                        <option value='Eucledian Distance'>Eucledian Distance</option>
+                    </select> -->
+                    <input type='radio' name='lineButton' value='Luminance' class='lineButton' id='lineButton' checked onchange='lineChange()'>
+                    <label for='linearBut' class='option lumBut'>
+                        <span>Luminance</span>
+                    <input type='radio' name='lineButton' value='Saliency' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='salBut' class='option salBut'>
+                        <span>Saliency</span>
+                    <input type='radio' name='lineButton' value='CIE00 Distance' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='cie00But' class='option cie00But'>
+                        <span>CIE00 Distance</span>
+                    <input type='radio' name='lineButton' value='Name Difference' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='nameBut' class='option nameBut'>
+                        <span>Name Difference</span>
+                    <input type='radio' name='lineButton' value='Eucledian Distance' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='euclBut' class='option euclBut'>
+                        <span>Eucledian Distance</span>
+                    <div class='lineGraph' id='lineGraph'></div>
+                </div>
+
+                <!-- SUGGESTIONS -->
+                <!-- <div class='mapSuggest'>
+                    <h2><u>SUGGESTIONS</u></h2>
+                    <div id='mapSuggest'>
+                        <h6>SUGGESTION 1</h6>
+                        <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                        <h6>SUGGESTION 2</h6>
+                        <canvas id="sugg2" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                        <h6>SUGGESTION 3</h6>
+                        <canvas id="sugg3" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                    </div>
+                </div> -->
+>>>>>>> Stashed changes
             </div>
             <!-- COLOR SEARCH -->
             <div class='colorSearch' id='colorSearch'>
@@ -100,6 +158,25 @@
             // });
 //.................................................................................................................................................................................................................//
             // CALL FUNCTIONS
+            // worker.js
+            var myWorker = new Worker('worker.js');
+            function functWorker() {
+                // Web Worker
+                // Loader icon
+                var loader = document.getElementById('loader');
+                loader.style.visibility = "visible";
+                // Terminate old Worker and run new Worker
+                myWorker.terminate();
+                myWorker = new Worker('worker.js');
+                // Post Message in Worker
+                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                myWorker.onmessage = function(e) {
+                    drawColormap(e.data);
+                    drawLinegraph(e.data);
+                    loader.style.visibility = "hidden";
+                }
+            }
+
             // slice2D.js
             var sliderStepLum;
             drawSlice2D(lum, sal_init, sal_fin);
@@ -112,8 +189,77 @@
             var countCol = 0;
             var datasetSel = [];
             var datasetDrop = [];
+<<<<<<< Updated upstream
             drawCanvas();
             drawSelected();
+=======
+            var CLICK_count = 0;
+            var CLICK_time = null;
+            var colormap = null;
+            var flagLPos = false;
+            var oldLPos = 0;
+            var flagRPos = false;
+            var oldRPos = 0;
+            drawCanvas();
+            drawSelected();
+            drawAxes();
+
+            // sidebar.js
+            // Sliders for Constraints
+            drawHeaders();
+            drawSimSal();
+            drawLumDiff();
+            drawSLum();
+            drawPU();
+            drawSmo();
+            drawIter();
+            var val_lum = [0,100];
+            var lumRadio = 'linear';
+            function radioChange() {
+                lumRadio = d3.select('input[name="radioButton"]:checked').property("value");
+                // calcPalette(paletteLen, val_lum[0], val_lum[1]);
+
+                // Web Worker
+                // Loader icon
+                var loader = document.getElementById('loader');
+                loader.style.visibility = "visible";
+                // Terminate old Worker and run new Worker
+                myWorker.terminate();
+                myWorker = new Worker('worker.js');
+                // Post Message in Worker
+                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                myWorker.onmessage = function(e) {
+                    drawColormap(e.data);
+                    drawLinegraph(e.data);
+                    loader.style.visibility = "hidden";
+                }
+            }
+            var valBtn = 'Luminance';
+            function lineChange() {
+                valBtn = d3.select('input[name="lineButton"]:checked').property("value");
+                drawLinegraph(datasetDrop);
+            }
+            var val_algoIter = 0.9;
+            // Linear Weights
+            var val_salSimL = 100;  // 100
+            var val_ldSimL = -12500000;  // -1000000
+            var val_puSimL = -10000; // -5000
+            var val_lboSimL = -500; // -500
+            var val_smoSimL = 2000; // 2000
+
+            // Diverging Weights
+            var val_salSimD = 40;    // 40
+            var val_ldSimD = -12500000; // -1000000
+            var val_puSimD = -20000;    // -10000
+            var val_lboSimD = -500; // 500
+            var val_smoSimD = 100;  // 100
+
+            // // Preset Colormaps
+            // var presetMaps = [grayscale, singlehue, turbo, blueorange, threewave, inferno, viridis];
+            // const randPreset = presetMaps[Math.floor(Math.random() * presetMaps.length)];
+            // drawPreset(randPreset);
+            drawDropPreset(viridis);
+>>>>>>> Stashed changes
 //.................................................................................................................................................................................................................//
 
         </script>
