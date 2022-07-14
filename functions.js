@@ -88,32 +88,7 @@ function cie76Distance(c1, c2)
     var i2 = index(c2);
     var col1 = c3.color[i1];
     var col2 = c3.color[i2];
-    return Math.sqrt((col2.l - col1.l)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
-}
-
-// Create Color Dictionary: LAB, Saliency, (Name)
-var color_dict = [];
-for (var c=0; c<c3.color.length; c++) {
-    var x = c3.color[c];
-    color_dict.push({
-        lab: [x.L,x.a,x.b],
-        saliency: nameSalience(x),
-        name: nameDistribution(x),
-        fill: fill_color(x)
-    });
-    // color_dict.sort(function(a,b) { return b.saliency - a.saliency});
-}
-
-// Create Name Dict of most Salient: Name, LAB
-var name_map = [];
-var W = c3.terms.length;
-for (var i=0; i<W; ++i) {
-    name_map.push({
-        name: c3.terms[i],
-        LAB: [(c3.terms.center[i].L),(c3.terms.center[i].a),(c3.terms.center[i].b)],
-        saliency: nameSalience(d3.lab(c3.terms.center[i].L,c3.terms.center[i].a,c3.terms.center[i].b))
-    });
-    name_map.sort(function(a,b) { return b.saliency - a.saliency});
+    return Math.sqrt((col2.L - col1.L)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
 }
 
 // PERCEPTUAL DISTANCE -> CIE00 DISTANCE
@@ -125,23 +100,26 @@ function cie00Distance(c1, c2) {
     var deg = 180/Math.PI;
     var rad = Math.PI/180;
 
-    var c1 = Math.sqrt(col1.a**2 + col1.b**2);
-    var c2 = Math.sqrt(col2.a**2 + col2.b**2);
+    if(col1 !== undefined && col2 !== undefined) {
+        var c1 = Math.sqrt(col1.a**2 + col1.b**2);
+        var c2 = Math.sqrt(col2.a**2 + col2.b**2);
 
-    var delL = col2.l - col1.l;
-    var barL = (col1.l + col2.l)/2;
-    var barC = (c1 + c2)/2;
+        var delL = col2.L - col1.L;
+        var barL = (col1.L + col2.L)/2;
+        var barC = (c1 + c2)/2;
 
-    var dashA1 = col1.a + (col1.a/2) * (1 - Math.sqrt(barC ** 7/(barC ** 7 + 25 ** 7)));
-    var dashA2 = col2.a + (col2.a/2) * (1 - Math.sqrt(barC ** 7/(barC ** 7 + 25 ** 7)));
+        var dashA1 = col1.a + (col1.a/2) * (1 - Math.sqrt(barC ** 7/(barC ** 7 + 25 ** 7)));
+        var dashA2 = col2.a + (col2.a/2) * (1 - Math.sqrt(barC ** 7/(barC ** 7 + 25 ** 7)));
 
-    var dashC1 = Math.sqrt(dashA1 ** 2 + col1.b ** 2);
-    var dashC2 = Math.sqrt(dashA2 ** 2 + col2.b ** 2);
-    var dashC = (dashC1 + dashC2)/2;
-    var delC = dashC2 - dashC1;
+        var dashC1 = Math.sqrt(dashA1 ** 2 + col1.b ** 2);
+        var dashC2 = Math.sqrt(dashA2 ** 2 + col2.b ** 2);
+        var dashC = (dashC1 + dashC2)/2;
+        var delC = dashC2 - dashC1;
 
-    var dashH1 = ((Math.atan2(col1.b,dashA1)) * deg + 360) % 360;
-    var dashH2 = ((Math.atan2(col2.b,dashA2)) * deg + 360) % 360;
+        var dashH1 = ((Math.atan2(col1.b,dashA1)) * deg + 360) % 360;
+        var dashH2 = ((Math.atan2(col2.b,dashA2)) * deg + 360) % 360;
+    }
+
     var delh = Math.abs(dashH1 - dashH2) <= 180 ? dashH2 - dashH1: dashH2 <= dashH1 ? dashH2 - dashH1 + 360 : dashH2 - dashH1 - 360;
     var delH = 2 * Math.sqrt(dashC1 * dashC2) * Math.sin((delh/2) * rad);
     var barH = Math.abs(dashH1 - dashH2) <= 180 ? (dashH1 + dashH2)/2 : dashH1 + dashH2 < 360 ? (dashH1 + dashH2 + 360)/2 : (dashH1 + dashH2 - 360)/2;
@@ -231,3 +209,42 @@ function getRandom(min, max) {
     // Both min and max are inclusive
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+// Create Color Dictionary: LAB, Saliency, (Name)
+var color_dict = [];
+for (var c=0; c<c3.color.length; c++) {
+    var x = c3.color[c];
+    color_dict.push({
+        lab: [x.L,x.a,x.b],
+        saliency: nameSalience(x),
+        name: nameDistribution(x),
+        fill: fill_color(x)
+    });
+    // color_dict.sort(function(a,b) { return b.saliency - a.saliency});
+}
+
+// Create Name Dict of most Salient: Name, LAB
+var name_map = [];
+var W = c3.terms.length;
+for (var i=0; i<W; ++i) {
+    name_map.push({
+        name: c3.terms[i],
+        LAB: [(c3.terms.center[i].L),(c3.terms.center[i].a),(c3.terms.center[i].b)],
+        saliency: nameSalience(d3.lab(c3.terms.center[i].L,c3.terms.center[i].a,c3.terms.center[i].b))
+    });
+    name_map.sort(function(a,b) { return b.saliency - a.saliency});
+}
+
+// // Blur Window
+// function winBlur() {
+//     var containerElement = document.getElementById('main_container');
+//     var overlayEle = document.getElementById('overlay');
+
+//     if (state) {
+//         overlayEle.style.display = 'block';
+//         containerElement.setAttribute('class', 'blur');
+//     } else {
+//         overlayEle.style.display = 'none';
+//         containerElement.setAttribute('class', null);
+//     }
+// }
