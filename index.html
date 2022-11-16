@@ -14,7 +14,8 @@
         <script src="lib/colorname/c3.js"></script>
         <script type="text/javascript" src="lib/colorname/analyzer.js"></script>
         <script type="text/javascript" src="d3.js"></script>
-        <script type="text/javascript" src="lib/d3.color.js"></script>
+        <!-- <script type="text/javascript" src="lib/d3.color.js"></script> -->
+        <script src="design/lib/d3-color.v1.min.js"></script>
         <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
         <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
         <link href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" rel="stylesheet"/>
@@ -28,7 +29,8 @@
         <script src="search.js"></script>
         <script src="slice2D.js"></script>
         <script src="colormap.js"></script>
-        <script src="algorithm.js"></script>
+        <!-- <script src="cmapTest.js"></script> -->
+        <!-- <script src="algorithm.js"></script> -->
         <script src="sidebar.js"></script>
         <script src="linegraph.js"></script>
         <!-- <script src="main.js"></script> -->
@@ -74,6 +76,7 @@
                         <option value='Name Difference'>Name Difference</option>
                         <option value='Eucledian Distance'>Eucledian Distance</option>
                     </select> -->
+
                     <input type='radio' name='lineButton' value='Luminance' class='lineButton' id='lineButton' checked onchange='lineChange()'>
                     <label for='linearBut' class='option lumBut'>
                         <span>Luminance</span>
@@ -86,24 +89,25 @@
                     <input type='radio' name='lineButton' value='Name Difference' class='lineButton' id='lineButton' onchange='lineChange()'>
                     <label for='nameBut' class='option nameBut'>
                         <span>Name Difference</span>
-                    <input type='radio' name='lineButton' value='Eucledian Distance' class='lineButton' id='lineButton' onchange='lineChange()'>
-                    <label for='euclBut' class='option euclBut'>
-                        <span>Eucledian Distance</span>
+                    <input type='radio' name='lineButton' value='Saturation' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='satBut' class='option satBut'>
+                        <span>Saturation</span>
                     <div class='lineGraph' id='lineGraph'></div>
                 </div>
 
                 <!-- SUGGESTIONS -->
-                <!-- <div class='mapSuggest'>
-                    <h2><u>SUGGESTIONS</u></h2>
+                <div class='mapSuggest'>
+                    <h2><u>TESTING</u></h2>
                     <div id='mapSuggest'>
-                        <h6>SUGGESTION 1</h6>
-                        <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
-                        <h6>SUGGESTION 2</h6>
+                        <!-- <h6>SUGGESTION 1</h6> -->
+                        <!-- <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br> -->
+                        <div class='helpGraph' id='helpGraph'></div>
+                        <!-- <h6>SUGGESTION 2</h6>
                         <canvas id="sugg2" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
                         <h6>SUGGESTION 3</h6>
-                        <canvas id="sugg3" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                        <canvas id="sugg3" width="500" height="50" style="border: solid 1px gray;"></canvas><br> -->
                     </div>
-                </div> -->
+                </div>
             </div>
             <!-- COLOR SEARCH -->
             <div class='colorSearch' id='colorSearch'>
@@ -117,6 +121,7 @@
                     <br>
                     <input type='text' id='search' class='colorSearch' placeholder='Type Color Name Here...'>
                 </div>
+                <div class='helpAllGraph' id='helpAllGraph'></div>
             </div>
         </div>
 
@@ -162,7 +167,21 @@
             var svg_linegraph = d3.select('div#lineGraph')
                                 .append('svg')
                                 .attr('preserveAspectRatio', 'xMinYMin meet')
-                                .attr('viewBox', '0 0 1000 300')
+                                .attr('viewBox', '0 0 1000 200')
+                                //   .style('background', 'plum')
+                                .classed('svg-content', true);
+            // Help Graph
+            var svg_helpgraph = d3.select('div#helpGraph')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 1050')
+                                //   .style('background', 'goldenrod')
+                                .classed('svg-content', true);
+            // Help All Graph
+            var svg_helpAllgraph = d3.select('div#helpAllGraph')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 1050')
                                 //   .style('background', 'plum')
                                 .classed('svg-content', true);
 //.................................................................................................................................................................................................................//
@@ -178,10 +197,12 @@
                 myWorker.terminate();
                 myWorker = new Worker('worker.js');
                 // Post Message in Worker
-                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
                 myWorker.onmessage = function(e) {
-                    drawColormap(e.data);
-                    drawLinegraph(e.data);
+                    drawColormap(e.data[0]);
+                    drawLinegraph(e.data[0]);
+                    // drawScatter(e.data[1]);
+                    drawPlot(e.data[0]);
                     loader.style.visibility = "hidden";
                 }
             }
@@ -193,7 +214,7 @@
             drawSliderSal();
 
             // algorithm.js
-            var paletteLen = 9;
+            var paletteLen = 5;
 
             // search.js
             drawSearchBox();
@@ -205,6 +226,7 @@
             var slidePos = 0;
             var datasetSel = [];
             var datasetDrop = [];
+            var dropArr = [];
             var CLICK_count = 0;
             var CLICK_time = null;
             var colormap = null;
@@ -215,6 +237,7 @@
             drawCanvas();
             drawSelected();
             drawAxes();
+            // drawComp();
 
             // sidebar.js
             // Sliders for Constraints
@@ -224,9 +247,10 @@
             drawSLum();
             drawPU();
             drawSmo();
-            drawIter();
+            // drawIter();
             var val_lum = [0,100];
             var lumRadio = 'linear';
+            var colRadio = 'singlehue';
             function radioChange() {
                 lumRadio = d3.select('input[name="radioButton"]:checked').property("value");
                 // calcPalette(paletteLen, val_lum[0], val_lum[1]);
@@ -239,30 +263,33 @@
                 myWorker.terminate();
                 myWorker = new Worker('worker.js');
                 // Post Message in Worker
-                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
                 myWorker.onmessage = function(e) {
-                    drawColormap(e.data);
-                    drawLinegraph(e.data);
+                    drawColormap(e.data[0]);
+                    drawLinegraph(e.data[0]);
+                    // drawScatter(e.data[1]);
+                    drawPlot(e.data[0]);
                     loader.style.visibility = "hidden";
                 }
             }
+
             var valBtn = 'Luminance';
             function lineChange() {
                 valBtn = d3.select('input[name="lineButton"]:checked').property("value");
                 drawLinegraph(datasetDrop);
             }
-            var val_algoIter = 0.9;
+            // var val_algoIter = 0.9;
             // Linear Weights
             var val_salSimL = 100;  // 100
-            var val_ldSimL = -12500000;  // -1000000
-            var val_puSimL = -10000; // -5000
+            var val_ldSimL = -3500;  // -1000000
+            var val_puSimL = -150; // -5000
             var val_lboSimL = -500; // -500
-            var val_smoSimL = 2000; // 2000
+            var val_smoSimL = 100; // 2000
 
             // Diverging Weights
             var val_salSimD = 40;    // 40
-            var val_ldSimD = -12500000; // -1000000
-            var val_puSimD = -20000;    // -10000
+            var val_ldSimD = -1000; // -1000000
+            var val_puSimD = -100;    // -10000
             var val_lboSimD = -500; // 500
             var val_smoSimD = 100;  // 100
 
@@ -270,7 +297,8 @@
             // var presetMaps = [grayscale, singlehue, turbo, blueorange, threewave, inferno, viridis];
             // const randPreset = presetMaps[Math.floor(Math.random() * presetMaps.length)];
             // drawPreset(randPreset);
-            drawDropPreset(viridis);
+            // drawDropPreset(viridis);
+            // drawColormapStart(infernoTest);
 //.................................................................................................................................................................................................................//
 
         </script>

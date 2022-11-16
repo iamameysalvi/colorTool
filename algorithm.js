@@ -291,8 +291,11 @@ function evalPalette(palette, col_len, minl, maxl) {
 // Random Color Disturb
 function randomDisturbColors(palette) {
     var iter_count = 0;
-    var disturb_abstep = 25;
+    var disturb_abstep = 30;
     var disturb_lstep = 5;
+
+    var disturb_abstep_1 = 15;
+    var disturb_lstep_1 = 5;
 
     while(iter_count <= 100) {
         iter_count++;
@@ -326,7 +329,7 @@ function randomDisturbColors(palette) {
         // Change selected colors: Randomize L, keeping a,b same
         else if(sel_color.sel == 1) {
             // Disturb LAB space - small l diff, no a,b diff -> L: (-5,5)
-            var new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturb_lstep, disturb_lstep)/5)), sel_color.LAB[1], sel_color.LAB[2]);
+            var new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturb_lstep_1, disturb_lstep_1)/5)), sel_color.LAB[1] + getRandom(-disturb_abstep_1, disturb_abstep_1), sel_color.LAB[2] + getRandom(-disturb_abstep_1, disturb_abstep_1));
 
             if(new_color.L >= 0 && new_color.L <= 100 && new_color.a >= -128 && new_color.a <= 127 && new_color.b >= -128 && new_color.b <= 127) {
                 var lab_new = d3.rgb(new_color);
@@ -354,8 +357,8 @@ function randomDisturbColors(palette) {
 function simulatedAnnealing2FindBestPalette(size, evaluateFunc, minl, maxl) {
     var iterate_times = 0;
     var max_temper = 100000; // initial temperature
-    // var dec = 0.99; // decrementation
-    var dec = val_algoIter; 
+    var dec = 0.99; // decrementation
+    // var dec = val_algoIter; 
     var max_iteration_times = 10000000; 
     var end_temper = 0.001; // end temperature
     var cur_temper = max_temper;

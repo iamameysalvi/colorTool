@@ -6,17 +6,17 @@ var cmap = {};
 for (var c=0; c<c3.color.length; ++c) 
 {
     var x = c3.color[c];
-    cmap[[x.L,x.a,x.b].join(",")] = c;
+    cmap[[x.l,x.a,x.b].join(",")] = c;
 }
 
 // CMAP IN LAB
 function index(c) 
 {
     var x = d3.lab(c),
-    L = 5 * Math.round(x.L/5),
+    l = 5 * Math.round(x.l/5),
     a = 5 * Math.round(x.a/5),
     b = 5 * Math.round(x.b/5),
-    s = [L,a,b].join(",");
+    s = [l,a,b].join(",");
     return cmap[s];
 }
 
@@ -88,7 +88,7 @@ function cie76Distance(c1, c2)
     var i2 = index(c2);
     var col1 = c3.color[i1];
     var col2 = c3.color[i2];
-    return Math.sqrt((col2.L - col1.L)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
+    return Math.sqrt((col2.l - col1.l)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
 }
 
 // PERCEPTUAL DISTANCE -> CIE00 DISTANCE
@@ -104,8 +104,8 @@ function cie00Distance(c1, c2) {
         var c1 = Math.sqrt(col1.a**2 + col1.b**2);
         var c2 = Math.sqrt(col2.a**2 + col2.b**2);
 
-        var delL = col2.L - col1.L;
-        var barL = (col1.L + col2.L)/2;
+        var delL = col2.l - col1.l;
+        var barL = (col1.l + col2.l)/2;
         var barC = (c1 + c2)/2;
 
         var dashA1 = col1.a + (col1.a/2) * (1 - Math.sqrt(barC ** 7/(barC ** 7 + 25 ** 7)));
@@ -215,7 +215,7 @@ var color_dict = [];
 for (var c=0; c<c3.color.length; c++) {
     var x = c3.color[c];
     color_dict.push({
-        lab: [x.L,x.a,x.b],
+        lab: [x.l,x.a,x.b],
         saliency: nameSalience(x),
         name: nameDistribution(x),
         fill: fill_color(x)
@@ -229,8 +229,8 @@ var W = c3.terms.length;
 for (var i=0; i<W; ++i) {
     name_map.push({
         name: c3.terms[i],
-        LAB: [(c3.terms.center[i].L),(c3.terms.center[i].a),(c3.terms.center[i].b)],
-        saliency: nameSalience(d3.lab(c3.terms.center[i].L,c3.terms.center[i].a,c3.terms.center[i].b))
+        LAB: [(c3.terms.center[i].l),(c3.terms.center[i].a),(c3.terms.center[i].b)],
+        saliency: nameSalience(d3.lab(c3.terms.center[i].l,c3.terms.center[i].a,c3.terms.center[i].b))
     });
     name_map.sort(function(a,b) { return b.saliency - a.saliency});
 }

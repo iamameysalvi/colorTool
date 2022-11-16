@@ -44,14 +44,14 @@ function drawHeaders() {
                 .attr('font-weight', 2400)
                 .attr('fill', '#222021');
 
-    // Algorithm Speed Heading
-    svg_sidebar.append('text')
-                .attr('x', 0)
-                .attr('y', 950)
-                .text('Algorithm Speed')
-                .style('font-size', '32px')
-                .attr('font-weight', 2400)
-                .attr('fill', '#222021');
+    // // Algorithm Speed Heading
+    // svg_sidebar.append('text')
+    //             .attr('x', 0)
+    //             .attr('y', 950)
+    //             .text('Algorithm Speed')
+    //             .style('font-size', '32px')
+    //             .attr('font-weight', 2400)
+    //             .attr('fill', '#222021');
 }
 
 
@@ -67,7 +67,7 @@ function drawLumDiff() {
                     .width(300)
                     .tickFormat(d3.format('.2d'))
                     .ticks(0)
-                    .default(0.8)
+                    .default(0)
                     .displayValue(false)
                     .fill('#761137')
                     .handle(
@@ -98,10 +98,12 @@ function drawLumDiff() {
                         myWorker.terminate();
                         myWorker = new Worker('worker.js');
                         // Post Message in Worker
-                        myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                        myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD, colRadio] });
                         myWorker.onmessage = function(e) {
-                            drawColormap(e.data);
-                            drawLinegraph(e.data);
+                            drawColormap(e.data[0]);
+                            drawLinegraph(e.data[0]);
+                            // drawScatter(e.data[1]);
+                            drawPlot(e.data[0]);
                             loader.style.visibility = "hidden";
                         }
                     });
@@ -114,7 +116,7 @@ function drawLumDiff() {
                 .attr('y', 150)
                 .style('font-size', 41)
                 .style('fill', '#757575')
-                .text('0.8');
+                .text('0');
 }
 
 function drawSimSal() {
@@ -157,10 +159,12 @@ function drawSimSal() {
                             myWorker.terminate();
                             myWorker = new Worker('worker.js');
                             // Post Message in Worker
-                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD, colRadio] });
                             myWorker.onmessage = function(e) {
-                                drawColormap(e.data);
-                                drawLinegraph(e.data);
+                                drawColormap(e.data[0]);
+                                drawLinegraph(e.data[0]);
+                                // drawScatter(e.data[1]);
+                                drawPlot(e.data[0]);
                                 loader.style.visibility = "hidden";
                             }
                         });
@@ -217,10 +221,12 @@ function drawPU() {
                             myWorker.terminate();
                             myWorker = new Worker('worker.js');
                             // Post Message in Worker
-                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD, colRadio] });
                             myWorker.onmessage = function(e) {
-                                drawColormap(e.data);
-                                drawLinegraph(e.data);
+                                drawColormap(e.data[0]);
+                                drawLinegraph(e.data[0]);
+                                // drawScatter(e.data[1]);
+                                drawPlot(e.data[0]);
                                 loader.style.visibility = "hidden";
                             }
                         });
@@ -277,10 +283,12 @@ function drawSmo() {
                             myWorker.terminate();
                             myWorker = new Worker('worker.js');
                             // Post Message in Worker
-                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD, colRadio] });
                             myWorker.onmessage = function(e) {
-                                drawColormap(e.data);
-                                drawLinegraph(e.data);
+                                drawColormap(e.data[0]);
+                                drawLinegraph(e.data[0]);
+                                // drawScatter(e.data[1]);
+                                drawPlot(e.data[0]);
                                 loader.style.visibility = "hidden";
                             }
                         });
@@ -338,10 +346,12 @@ function drawSLum() {
                             myWorker.terminate();
                             myWorker = new Worker('worker.js');
                             // Post Message in Worker
-                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], val_algoIter, datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                            myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD, colRadio] });
                             myWorker.onmessage = function(e) {
-                                drawColormap(e.data);
-                                drawLinegraph(e.data);
+                                drawColormap(e.data[0]);
+                                drawLinegraph(e.data[0]);
+                                // drawScatter(e.data[1]);
+                                drawPlot(e.data[0]);
                                 loader.style.visibility = "hidden";
                             }
                         });
@@ -357,53 +367,53 @@ function drawSLum() {
                 .text('0-100');
 }
 
-function drawIter() {
-    //SLIDER ALGORITHM ITERATIONS
-    var dataIter = ['Efficient', 'Medium', 'Quality'];
-    // var dataIter = [0.9,0.99];
-    var sliderIter = d3.sliderBottom()
-                        .min(0.9)
-                        .max(0.99)
-                        .width(300)
-                        .tickFormat(d3.format('.2f'))
-                        // .ticks(5)
-                        // For Steps
-                        .step(0.045)
-                        .ticks(dataIter)
-                        // .marks(dataIter)
-                        .default(0.9)
-                        .displayValue(false)
-                        .fill('#761137')
-                        .handle(
-                            d3.symbol()
-                            .type(d3.symbolCircle)
-                            .size(300)()
-                        )
-                        // Onchange Value
-                        .on('onchange', valIter => {
-                            svg_sidebar.selectAll('text.sliderIterText').remove();
-                                val_algoIter = valIter;
-                                if(parseFloat(valIter).toFixed(2) == 0.9) { textIter = dataIter[0]}
-                                else if (parseFloat(valIter).toFixed(2) == 0.99) { textIter = dataIter[2]}
-                                else { textIter = dataIter[1]}
-                            // Text Value
-                            svg_sidebar.append('text')
-                                        .attr('class','sliderIterText')
-                                        .attr('x', 350)
-                                        .attr('y', 1000)
-                                        .style('font-size', 35)
-                                        .style('fill', '#757575')
-                                        .text(textIter);
-                        });
+// function drawIter() {
+//     //SLIDER ALGORITHM ITERATIONS
+//     var dataIter = ['Efficient', 'Medium', 'Quality'];
+//     // var dataIter = [0.9,0.99];
+//     var sliderIter = d3.sliderBottom()
+//                         .min(0.9)
+//                         .max(0.99)
+//                         .width(300)
+//                         .tickFormat(d3.format('.2f'))
+//                         // .ticks(5)
+//                         // For Steps
+//                         .step(0.045)
+//                         .ticks(dataIter)
+//                         // .marks(dataIter)
+//                         .default(0.9)
+//                         .displayValue(false)
+//                         .fill('#761137')
+//                         .handle(
+//                             d3.symbol()
+//                             .type(d3.symbolCircle)
+//                             .size(300)()
+//                         )
+//                         // Onchange Value
+//                         .on('onchange', valIter => {
+//                             svg_sidebar.selectAll('text.sliderIterText').remove();
+//                                 val_algoIter = valIter;
+//                                 if(parseFloat(valIter).toFixed(2) == 0.9) { textIter = dataIter[0]}
+//                                 else if (parseFloat(valIter).toFixed(2) == 0.99) { textIter = dataIter[2]}
+//                                 else { textIter = dataIter[1]}
+//                             // Text Value
+//                             svg_sidebar.append('text')
+//                                         .attr('class','sliderIterText')
+//                                         .attr('x', 350)
+//                                         .attr('y', 1000)
+//                                         .style('font-size', 35)
+//                                         .style('fill', '#757575')
+//                                         .text(textIter);
+//                         });
 
-    // Call Slider
-    svg_sidebar.append('g').attr('transform', 'translate(15,1000)').call(sliderIter);
-    // Initial Text Value
-    svg_sidebar.append('text')
-                .attr('class','sliderIterText')
-                .attr('x', 350)
-                .attr('y', 1000)
-                .style('font-size', 35)
-                .style('fill', '#757575')
-                .text('Efficient');
-}
+//     // Call Slider
+//     svg_sidebar.append('g').attr('transform', 'translate(15,1000)').call(sliderIter);
+//     // Initial Text Value
+//     svg_sidebar.append('text')
+//                 .attr('class','sliderIterText')
+//                 .attr('x', 350)
+//                 .attr('y', 1000)
+//                 .style('font-size', 35)
+//                 .style('fill', '#757575')
+//                 .text('Efficient');
+// }
