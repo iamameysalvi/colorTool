@@ -14,7 +14,8 @@
         <script src="lib/colorname/c3.js"></script>
         <script type="text/javascript" src="lib/colorname/analyzer.js"></script>
         <script type="text/javascript" src="d3.js"></script>
-        <script type="text/javascript" src="lib/d3.color.js"></script>
+        <!-- <script type="text/javascript" src="lib/d3.color.js"></script> -->
+        <script src="design/lib/d3-color.v1.min.js"></script>
         <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
         <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
         <link href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" rel="stylesheet"/>
@@ -28,35 +29,100 @@
         <script src="search.js"></script>
         <script src="slice2D.js"></script>
         <script src="colormap.js"></script>
+        <!-- <script src="cmapTest.js"></script> -->
+        <!-- <script src="algorithm.js"></script> -->
+        <script src="sidebar.js"></script>
+        <script src="linegraph.js"></script>
+        <!-- <script src="main.js"></script> -->
+        <script src="worker.js"></script>
     </head>
 
     <body class='no-select'>
         <!-- LAYOUT TOP GRID -->
         <div id='grid-top' class='grid-top'>
+            <!-- SIDEBAR -->
+            <div class='sidebar' id='sidebar'>
+                <div class='part' id='part'>
+                    <h1>COLORTOOL</h1>
+                    <br>
+                    <p>Luminance Profile</p>
+                    <input type='radio' name='radioButton' value='linear' id='linearBut' checked onchange='radioChange()'>
+                    <label for='linearBut' class='option linearBut'>
+                        <span>LINEAR</span>
+                    <input type='radio' name='radioButton' value='diverging' id='divergingBut' onchange='radioChange()'>
+                    <label for='divergingBut' class='option divergingBut'>
+                        <span>DIVERGING</span>
+                    <br>
+                </div>
+            </div>
             <!-- COLORMAP -->
             <div class='colormapMain'>
                 <h2><u>COLORMAP</u></h2>
                 <div id='colormap'>
-                    <canvas id="canvasMain" width="725" height="65" style="border: solid 1px gray;"></canvas><br>
+                    <canvas id='canvasMain' width='740' height='65' style='border: solid 1px gray;'></canvas><br>
+                    <!-- <button type='button' class='iconButton' onclick='calcPalette(paletteLen, val_lum[0], val_lum[1]);' id='replay' value='replay'><i class='material-icons' style='font-size: 2em;'>replay</i> -->
+                    <button type='button' class='iconButton' onclick='functWorker();' id='replay' value='replay'><i class='material-icons' style='font-size: 2em;'>replay</i>
+                        <p>Regenerate</p>
+                    </button>
+                    <div class='loader' id="loader" style="visibility: hidden;"></div>
                 </div>
                 <div class='colorSel' id='colorSel'></div>
+                <!-- LINEGRAPH -->
+                <div class='linesMain' id='linesMain'>
+                    <!-- <select id='lineButton' name='lineButton' class="lineButton" onchange='drawLinegraph(datasetDrop)'>
+                        <option value='Luminance'>Luminance</option>
+                        <option value='Saliency'>Saliency</option>
+                        <option value='CIE00 Distance'>CIE00 Distance</option>
+                        <option value='Name Difference'>Name Difference</option>
+                        <option value='Eucledian Distance'>Eucledian Distance</option>
+                    </select> -->
+
+                    <input type='radio' name='lineButton' value='Luminance' class='lineButton' id='lineButton' checked onchange='lineChange()'>
+                    <label for='linearBut' class='option lumBut'>
+                        <span>Luminance</span>
+                    <input type='radio' name='lineButton' value='Saliency' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='salBut' class='option salBut'>
+                        <span>Saliency</span>
+                    <input type='radio' name='lineButton' value='CIE00 Distance' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='cie00But' class='option cie00But'>
+                        <span>CIE00 Distance</span>
+                    <input type='radio' name='lineButton' value='Name Difference' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='nameBut' class='option nameBut'>
+                        <span>Name Difference</span>
+                    <input type='radio' name='lineButton' value='Saturation' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='satBut' class='option satBut'>
+                        <span>Saturation</span>
+                    <div class='lineGraph' id='lineGraph'></div>
+                </div>
+
+                <!-- SUGGESTIONS -->
+                <div class='mapSuggest'>
+                    <h2><u>TESTING</u></h2>
+                    <div id='mapSuggest'>
+                        <!-- <h6>SUGGESTION 1</h6> -->
+                        <!-- <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br> -->
+                        <div class='helpGraph' id='helpGraph'></div>
+                        <!-- <h6>SUGGESTION 2</h6>
+                        <canvas id="sugg2" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
+                        <h6>SUGGESTION 3</h6>
+                        <canvas id="sugg3" width="500" height="50" style="border: solid 1px gray;"></canvas><br> -->
+                    </div>
+                </div>
             </div>
             <!-- COLOR SEARCH -->
             <div class='colorSearch' id='colorSearch'>
                 <h2><u>COLOR SEARCH</u></h2>
-                <div class='colorHist' id='colorHist'></div>
+                <div class="grid-search" id="grid-search">
+                    <div class='colorHist' id='colorHist'></div>
+                    <div class="slice2D" id='slice2D'></div>
+                </div>
                 <div class='searchText' id='searchText'>
                     <label for='search'>Color Name:</label>
                     <br>
                     <input type='text' id='search' class='colorSearch' placeholder='Type Color Name Here...'>
                 </div>
+                <div class='helpAllGraph' id='helpAllGraph'></div>
             </div>
-            <!-- 2D SLICE -->
-            <div class='slice2D'>
-                <h2><u>2D SLICE</u></h2>
-                <div id='slice2D'></div>
-            </div>
-
         </div>
 
 
@@ -68,52 +134,171 @@
                               .attr('preserveAspectRatio', 'xMinYMin meet')
                               .attr('viewBox', '0 0 1000 250')
                             //   .style('background', 'salmon')
-                            .classed('svg-content', true);
+                              .classed('svg-content', true);
             // Color Search
             var svg_search = d3.select('div#colorHist')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                              .attr('viewBox', '0 0 1000 250')
+                              .attr('viewBox', '0 0 800 250')
                               .attr('id', 'scroll')
                             //   .style('background', 'palegoldenrod')
-                            .classed('svg-content', true);
+                              .classed('svg-content', true);
             var svg_searchText = d3.select('div#searchText')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                              .attr('viewBox', '0 0 1000 450')
+                              .attr('viewBox', '0 0 1500 450')
                             //   .style('background', 'palegoldenrod')
-                            .classed('svg-content', true);
+                              .classed('svg-content', true);
             // 2D Slice
             var svg_slice2D = d3.select('div#slice2D')
                               .append('svg')
                               .attr('preserveAspectRatio', 'xMinYMin meet')
-                              .attr('viewBox', '0 0 1000 1100')
+                              .attr('viewBox', '0 0 1500 1200')
                             //   .style('background', 'plum')
                               .classed('svg-content', true);
-
-            // // DESELECT DROPDOWN MENU
-            // d3.select('body')
-            // .on('click', function() {
-            //     // document.getElementById('search').value = "";
-            //     svg_searchText.selectAll('text').remove();
-            //     svg_searchText.selectAll('rect').remove();
-            // });
+            // Sliders
+            var svg_sidebar = d3.select('div#part')
+                              .append('svg')
+                              .attr('preserveAspectRatio', 'xMinYMin meet')
+                              .attr('viewBox', '0 0 500 1100')
+                            //   .style('background', 'plum')
+                              .classed('svg-content', true);
+            // Line Graph
+            var svg_linegraph = d3.select('div#lineGraph')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 200')
+                                //   .style('background', 'plum')
+                                .classed('svg-content', true);
+            // Help Graph
+            var svg_helpgraph = d3.select('div#helpGraph')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 1050')
+                                //   .style('background', 'goldenrod')
+                                .classed('svg-content', true);
+            // Help All Graph
+            var svg_helpAllgraph = d3.select('div#helpAllGraph')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 1050')
+                                //   .style('background', 'plum')
+                                .classed('svg-content', true);
 //.................................................................................................................................................................................................................//
             // CALL FUNCTIONS
+            // worker.js
+            var myWorker = new Worker('worker.js');
+            function functWorker() {
+                // Web Worker
+                // Loader icon
+                var loader = document.getElementById('loader');
+                loader.style.visibility = "visible";
+                // Terminate old Worker and run new Worker
+                myWorker.terminate();
+                myWorker = new Worker('worker.js');
+                // Post Message in Worker
+                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                myWorker.onmessage = function(e) {
+                    drawColormap(e.data[0]);
+                    drawLinegraph(e.data[0]);
+                    // drawScatter(e.data[1]);
+                    drawPlot(e.data[0]);
+                    loader.style.visibility = "hidden";
+                }
+            }
+
             // slice2D.js
             var sliderStepLum;
             drawSlice2D(lum, sal_init, sal_fin);
             drawSliderLum();
             drawSliderSal();
+
+            // algorithm.js
+            var paletteLen = 5;
+
             // search.js
             drawSearchBox();
             searchFunct();
-            // colorName.js
+
+            // colormap.js
             var countCol = 0;
+            var countDrop = 0;
+            var slidePos = 0;
             var datasetSel = [];
             var datasetDrop = [];
+            var dropArr = [];
+            var CLICK_count = 0;
+            var CLICK_time = null;
+            var colormap = null;
+            var flagLPos = false;
+            var oldLPos = 0;
+            var flagRPos = false;
+            var oldRPos = 0;
             drawCanvas();
             drawSelected();
+            drawAxes();
+            // drawComp();
+
+            // sidebar.js
+            // Sliders for Constraints
+            drawHeaders();
+            drawSimSal();
+            drawLumDiff();
+            drawSLum();
+            drawPU();
+            drawSmo();
+            // drawIter();
+            var val_lum = [0,100];
+            var lumRadio = 'linear';
+            var colRadio = 'singlehue';
+            function radioChange() {
+                lumRadio = d3.select('input[name="radioButton"]:checked').property("value");
+                // calcPalette(paletteLen, val_lum[0], val_lum[1]);
+
+                // Web Worker
+                // Loader icon
+                var loader = document.getElementById('loader');
+                loader.style.visibility = "visible";
+                // Terminate old Worker and run new Worker
+                myWorker.terminate();
+                myWorker = new Worker('worker.js');
+                // Post Message in Worker
+                myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], datasetDrop, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD] });
+                myWorker.onmessage = function(e) {
+                    drawColormap(e.data[0]);
+                    drawLinegraph(e.data[0]);
+                    // drawScatter(e.data[1]);
+                    drawPlot(e.data[0]);
+                    loader.style.visibility = "hidden";
+                }
+            }
+
+            var valBtn = 'Luminance';
+            function lineChange() {
+                valBtn = d3.select('input[name="lineButton"]:checked').property("value");
+                drawLinegraph(datasetDrop);
+            }
+            // var val_algoIter = 0.9;
+            // Linear Weights
+            var val_salSimL = 100;  // 100
+            var val_ldSimL = -3500;  // -1000000
+            var val_puSimL = -150; // -5000
+            var val_lboSimL = -500; // -500
+            var val_smoSimL = 100; // 2000
+
+            // Diverging Weights
+            var val_salSimD = 40;    // 40
+            var val_ldSimD = -1000; // -1000000
+            var val_puSimD = -100;    // -10000
+            var val_lboSimD = -500; // 500
+            var val_smoSimD = 100;  // 100
+
+            // // Preset Colormaps
+            // var presetMaps = [grayscale, singlehue, turbo, blueorange, threewave, inferno, viridis];
+            // const randPreset = presetMaps[Math.floor(Math.random() * presetMaps.length)];
+            // drawPreset(randPreset);
+            // drawDropPreset(viridis);
+            // drawColormapStart(infernoTest);
 //.................................................................................................................................................................................................................//
 
         </script>
