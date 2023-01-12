@@ -238,11 +238,11 @@ onmessage = function(e) {
             var wSmo = valSmo_D;
         }
 
-        console.log(angleDiff);
-
         // finScore = (wLD * lumDifference) + (wPU * perc_fin) + (wSmo * angleDifference);
+        // scoreArr.push([finScore, nSalience, lumDifference, perc_fin, angleDifference, palette]);
+
         finScore = (wPU * perc_fin) + (wSmo * angleDifference);
-        scoreArr.push([finScore, nSalience, lumDifference, perc_fin, angleDifference, palette]);
+        scoreArr.push([finScore, nSalience, perc_fin, angleDifference, palette]);
 
         return finScore;
     }

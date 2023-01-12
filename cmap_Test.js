@@ -936,7 +936,7 @@ function initSinglePos(pos, rectCol) {
     myWorker.onmessage = function(e) {
         drawColormap(e.data[0]);
         drawLinegraph(e.data[0]);
-        drawScatter(e.data[1]);
+        // drawScatter(e.data[1]);
         drawPlot(e.data[0]);
         // loader.style.visibility = "hidden";
     }
@@ -1416,7 +1416,7 @@ function initMultPos(pos, rectCol) {
     myWorker.onmessage = function(e) {
         drawColormap(e.data[0]);
         drawLinegraph(e.data[0]);
-        drawScatter(e.data[1]);
+        // drawScatter(e.data[1]);
         drawPlot(e.data[0]);
         // loader.style.visibility = "hidden";
     }
