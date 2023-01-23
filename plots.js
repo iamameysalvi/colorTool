@@ -436,8 +436,8 @@ function drawPlot(plotData) {
                                 //             .style('font-size', '15px')
                                 //             .raise();
 
-                                drawColormap(plotData);
-                                drawLinegraph(plotData);
+                                // drawColormap(plotData);
+                                // drawLinegraph(plotData);
                                 // drawPlot(plotData);
                             })
 
@@ -479,9 +479,9 @@ function drawPlot(plotData) {
                                 // Call initPos Function
                                 initMultPos(circDrop.attr('index'), colL);
 
-                                drawColormap(plotData);
-                                drawLinegraph(plotData);
-                                drawPlot(plotData);
+                                // drawColormap(plotData);
+                                // drawLinegraph(plotData);
+                                // drawPlot(plotData);
                             })
                         });
                         // .append("title")
@@ -780,334 +780,167 @@ function drawPlot(plotData) {
     drawPlot_Lb();
 }
 
-// // COMPARISON AXES
-// function drawComp() {
-//     // Draw the X-Axis
-//     var x = d3.scaleLinear()
-//                 .domain([0, 100])
-//                 .range([0, 350]);
-//     svg_linegraph.append('g')
-//                 .attr('transform', 'translate(50,575)') 
-//                 .call(d3.axisBottom(x).tickValues([]));
-//     svg_linegraph.append('text')
-//                 .attr('text-anchor', 'end')
-//                 .attr('x', 300)
-//                 .attr('y', 600)
-//                 .text('Lum Difference')
+// COMPARISON AXES
+function drawComp() {
+    // Draw the X-Axis
+    var x = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, 350]);
+    svg_linegraph.append('g')
+                .attr('transform', 'translate(50,575)') 
+                .call(d3.axisBottom(x).tickValues([]));
+    svg_linegraph.append('text')
+                .attr('text-anchor', 'end')
+                .attr('x', 300)
+                .attr('y', 600)
+                .text('Lum Difference')
 
-//     // Draw the Y-Axis
-//     var y = d3.scaleLinear()
-//                 .domain([0, 100])        
-//                 .range([0, 350]);  
-//     svg_linegraph.append('g')
-//                 .attr('transform', 'translate(50,225)')   
-//                 .call(d3.axisLeft(y).tickValues([]));
-//     svg_linegraph.append('text')
-//                 .attr('text-anchor', 'end')
-//                 .attr('x', -350)
-//                 .attr('y', 35)
-//                 .attr('transform', 'rotate(-90)')
-//                 .text('Perc Unif')
-// }
-
-
-// function drawScatter(scatData) {
-//     svg_helpgraph.selectAll('circle.scatCirc').remove();
-//     svg_helpgraph.selectAll('text.scatText').remove();
-//     svg_helpgraph.selectAll('text.finText').remove();
-//     svg_helpAllgraph.selectAll('circle.scatCirc').remove();
-//     svg_helpAllgraph.selectAll('text.scatText').remove();
-//     svg_helpAllgraph.selectAll('text.finText').remove();
-
-//     var MinMaxSal = [];
-//     var MinMaxLD = [];
-//     var MinMaxPU = [];
-//     var MinMaxSmo = [];
-//     var MinMaxVal = [];
-//     var valScat = scatData.slice(0,500);
-//     for(i = 0; i < valScat.length; i++) { 
-//         MinMaxSal.push(valScat[i][1]);
-//         MinMaxLD.push(valScat[i][2]);
-//         MinMaxPU.push(valScat[i][3]);
-//         MinMaxSmo.push(valScat[i][4]);
-//         MinMaxVal.push(Math.abs(valScat[i][0]));
-//     }
-
-//     // LD v PU
-//     // Draw the X-Axis
-//     var x1 = d3.scaleLinear()
-//             .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-//             .range([0, 900]);
-//     svg_helpgraph.append('g')
-//             .attr('transform', 'translate(50,225)') 
-//             .call(d3.axisBottom(x1).tickValues([]));
-//     svg_helpgraph.append('text')
-//             .attr('class', 'scatText')
-//             .attr('text-anchor', 'end')
-//             .attr('x', 500)
-//             .attr('y', 250)
-//             .text('Lum Difference')
-
-//     // Draw the Y-Axis
-//     var y1 = d3.scaleLinear()
-//             .domain([Math.min(...MinMaxPU), Math.max(...MinMaxPU)])        
-//             .range([200, 0]);
-
-//     var col1 = d3.scaleSequential()
-//                 .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
-//                 .interpolator(d3.interpolateBlues);
-
-//     svg_helpgraph.append('g')
-//             .attr('transform', 'translate(50,25)')   
-//             .call(d3.axisLeft(y1).tickValues([]));
-//     svg_helpgraph.append('text')
-//             .attr('class', 'scatText')
-//             .attr('text-anchor', 'end')
-//             .attr('x', -75)
-//             .attr('y', 35)
-//             .attr('transform', 'rotate(-90)')
-//             .text('Perc Unif')
-//     for(i = 0; i < valScat.length; i++) {
-//         svg_helpgraph.append('circle')
-//                     .attr('class', 'scatCirc')
-//                     .attr('index', function() { return i; })
-//                     .attr('cx', function(d) { return x1(valScat[i][2]) + 50; } )
-//                     .attr('cy', function(d) { return y1(valScat[i][3]) + 25; } )
-//                     .attr('r', 5)
-//                     .attr('stroke', '#A8A8A8')
-//                     .attr('fill', function(d) { return col1(valScat[i][0])})
-//                     .on('mouseover', function() {
-//                         svg_helpgraph.selectAll('text.finText').remove();
-//                         var idMap = d3.select(this).attr('index');
-//                         drawHelpermap(valScat[idMap][5]);
-//                         svg_helpgraph.append('text')
-//                                     .attr('class', 'finText')
-//                                     .attr('text-anchor', 'end')
-//                                     .attr('x', 400)
-//                                     .attr('y', 20)
-//                                     .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', P.Uniformity: ' + d3.format('.2f')(valScat[idMap][3]));
-//                     })
-//                     .append('title').text(function() { return valScat[i][0]; });
-//     }
+    // Draw the Y-Axis
+    var y = d3.scaleLinear()
+                .domain([0, 100])        
+                .range([0, 350]);  
+    svg_linegraph.append('g')
+                .attr('transform', 'translate(50,225)')   
+                .call(d3.axisLeft(y).tickValues([]));
+    svg_linegraph.append('text')
+                .attr('text-anchor', 'end')
+                .attr('x', -350)
+                .attr('y', 35)
+                .attr('transform', 'rotate(-90)')
+                .text('Perc Unif')
+}
 
 
-//     // LD v SMO
-//     // Draw the X-Axis
-//     var x2 = d3.scaleLinear()
-//             .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-//             .range([0, 900]);
-//     svg_helpgraph.append('g')
-//             .attr('transform', 'translate(50,475)') 
-//             .call(d3.axisBottom(x2).tickValues([]));
-//     svg_helpgraph.append('text')
-//             .attr('class', 'scatText')
-//             .attr('text-anchor', 'end')
-//             .attr('x', 500)
-//             .attr('y', 500)
-//             .text('Lum Difference')
+function drawScatter(scatData) {
+    svg_helpgraph.selectAll('circle.scatCirc').remove();
+    svg_helpgraph.selectAll('text.scatText').remove();
+    svg_helpgraph.selectAll('text.finText').remove();
+    svg_helpAllgraph.selectAll('circle.scatCirc').remove();
+    svg_helpAllgraph.selectAll('text.scatText').remove();
+    svg_helpAllgraph.selectAll('text.finText').remove();
 
-//     // Draw the Y-Axis
-//     var y2 = d3.scaleLinear()
-//             .domain([Math.min(...MinMaxSmo), Math.max(...MinMaxSmo)])        
-//             .range([200, 0]);
+    var MinMaxPU = [];
+    var MinMaxSmo = [];
+    var MinMaxVal = [];
+    var valScat = scatData.slice(0,1834);
+    for(i = 0; i < valScat.length; i++) { 
+        MinMaxPU.push(valScat[i][2]);
+        MinMaxSmo.push(valScat[i][3]);
+        MinMaxVal.push(valScat[i][0]);
+    }
 
-//     var col2 = d3.scaleSequential()
-//                 .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
-//                 .interpolator(d3.interpolateReds);
+    // LD v PU
+    // Draw the X-Axis
+    var x1 = d3.scaleLinear()
+            .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])
+            .range([0, 900]);
+    svg_helpgraph.append('g')
+            .attr('transform', 'translate(50,225)') 
+            .call(d3.axisBottom(x1).tickValues([]));
+    svg_helpgraph.append('text')
+            .attr('class', 'scatText')
+            .attr('text-anchor', 'end')
+            .attr('x', 500)
+            .attr('y', 250)
+            .text('Final Score')
 
-//     svg_helpgraph.append('g')
-//             .attr('transform', 'translate(50,275)')   
-//             .call(d3.axisLeft(y2).tickValues([]));
-//     svg_helpgraph.append('text')
-//             .attr('class', 'scatText')
-//             .attr('text-anchor', 'end')
-//             .attr('x', -325)
-//             .attr('y', 35)
-//             .attr('transform', 'rotate(-90)')
-//             .text('Smoothness')
-//     for(i = 0; i < valScat.length; i++) {
-//         svg_helpgraph.append('circle')
-//                     .attr('class', 'scatCirc')
-//                     .attr('index', function() { return i; })
-//                     .attr('cx', function(d) { return x2(valScat[i][2]) + 50; } )
-//                     .attr('cy', function(d) { return y2(valScat[i][4]) + 275; } )
-//                     .attr('r', 5)
-//                     .attr('stroke', '#A8A8A8')
-//                     .attr('fill', function(d) { return col2(valScat[i][0])})
-//                     .on('mouseover', function() {
-//                         svg_helpgraph.selectAll('text.finText').remove();
-//                         var idMap = d3.select(this).attr('index');
-//                         drawHelpermap(valScat[idMap][5]);
-//                         svg_helpgraph.append('text')
-//                                     .attr('class', 'finText')
-//                                     .attr('text-anchor', 'end')
-//                                     .attr('x', 400)
-//                                     .attr('y', 20)
-//                                     .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Smoothness: ' + d3.format('.2f')(valScat[idMap][4]));
-//                     })
-//                     .append('title').text(function() { return valScat[i][0]; });
-//     }
+    // Draw the Y-Axis
+    var y1 = d3.scaleLinear()
+            .domain([Math.min(...MinMaxPU), Math.max(...MinMaxPU)])        
+            .range([200, 0]);
 
+    var col1 = d3.scaleSequential()
+                .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
+                .interpolator(d3.interpolateBlues);
 
-//     // LD v Sal
-//     // Draw the X-Axis
-//     var x3 = d3.scaleLinear()
-//             .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-//             .range([0, 900]);
-//     svg_helpgraph.append('g')
-//             .attr('transform', 'translate(50,725)') 
-//             .call(d3.axisBottom(x3).tickValues([]));
-//     svg_helpgraph.append('text')
-//             .attr('class', 'scatText')
-//             .attr('text-anchor', 'end')
-//             .attr('x', 500)
-//             .attr('y', 750)
-//             .text('Lum Difference')
-
-//     // Draw the Y-Axis
-//     var y3 = d3.scaleLinear()
-//             .domain([Math.min(...MinMaxSal), Math.max(...MinMaxSal)])        
-//             .range([200, 0]);
-
-//     var col3 = d3.scaleSequential()
-//                 .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
-//                 .interpolator(d3.interpolateGreens);
-
-//     svg_helpgraph.append('g')
-//             .attr('transform', 'translate(50,525)')   
-//             .call(d3.axisLeft(y3).tickValues([]));
-//     svg_helpgraph.append('text')
-//             .attr('class', 'scatText')
-//             .attr('text-anchor', 'end')
-//             .attr('x', -575)
-//             .attr('y', 35)
-//             .attr('transform', 'rotate(-90)')
-//             .text('Saliency')
-//     for(i = 0; i < valScat.length; i++) {
-//         svg_helpgraph.append('circle')
-//                     .attr('class', 'scatCirc')
-//                     .attr('index', function() { return i; })
-//                     .attr('cx', function(d) { return x3(valScat[i][2]) + 50; } )
-//                     .attr('cy', function(d) { return y3(valScat[i][1]) + 525; } )
-//                     .attr('r', 5)
-//                     .attr('stroke', '#A8A8A8')
-//                     .attr('fill', function(d) { return col3(valScat[i][0])})
-//                     .on('mouseover', function() {
-//                         svg_helpgraph.selectAll('text.finText').remove();
-//                         var idMap = d3.select(this).attr('index');
-//                         drawHelpermap(valScat[idMap][5]);
-//                         svg_helpgraph.append('text')
-//                                     .attr('class', 'finText')
-//                                     .attr('text-anchor', 'end')
-//                                     .attr('x', 400)
-//                                     .attr('y', 20)
-//                                     .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Saliency: ' + d3.format('.2f')(valScat[idMap][1]));
-//                     });
-//     }
+    svg_helpgraph.append('g')
+            .attr('transform', 'translate(50,25)')   
+            .call(d3.axisLeft(y1).tickValues([]));
+    svg_helpgraph.append('text')
+            .attr('class', 'scatText')
+            .attr('text-anchor', 'end')
+            .attr('x', -75)
+            .attr('y', 35)
+            .attr('transform', 'rotate(-90)')
+            .text('Perc Unif')
+    for(i = 0; i < valScat.length; i++) {
+        svg_helpgraph.append('circle')
+                    .attr('class', 'scatCirc')
+                    .attr('index', function() { return i; })
+                    .attr('cx', function(d) { return x1(valScat[i][0]) + 50; } )
+                    .attr('cy', function(d) { return y1(valScat[i][2]) + 25; } )
+                    .attr('r', 5)
+                    .attr('stroke', '#A8A8A8')
+                    .attr('fill', function(d) { return col1(valScat[i][0])})
+                    .on('mouseover', function() {
+                        svg_helpgraph.selectAll('text.finText').remove();
+                        var idMap = d3.select(this).attr('index');
+                        drawHelpermap(valScat[idMap][4]);
+                        svg_helpgraph.append('text')
+                                    .attr('class', 'finText')
+                                    .attr('text-anchor', 'end')
+                                    .attr('x', 400)
+                                    .attr('y', 20)
+                                    .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', P.Uniformity: ' + d3.format('.2f')(valScat[idMap][2]));
+                    })
+                    .append('title').text(function() { return valScat[i][0]; });
+    }
 
 
-   
-//     // // Weights: LD v All
-//     // // Draw the X-Axis
-//     // var x5 = d3.scaleLinear()
-//     //         .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-//     //         .range([0, 900]);
-//     // svg_helpAllgraph.append('g')
-//     //         .attr('transform', 'translate(50,625)') 
-//     //         .call(d3.axisBottom(x5).tickValues([]));
-//     // svg_helpAllgraph.append('text')
-//     //         .attr('class', 'scatText')
-//     //         .attr('text-anchor', 'end')
-//     //         .attr('x', 500)
-//     //         .attr('y', 650)
-//     //         .text('Lum Difference')
+    // LD v SMO
+    // Draw the X-Axis
+    var x2 = d3.scaleLinear()
+            .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])
+            .range([0, 900]);
+    svg_helpgraph.append('g')
+            .attr('transform', 'translate(50,475)') 
+            .call(d3.axisBottom(x2).tickValues([]));
+    svg_helpgraph.append('text')
+            .attr('class', 'scatText')
+            .attr('text-anchor', 'end')
+            .attr('x', 500)
+            .attr('y', 500)
+            .text('Final Score')
 
-//     // // Draw the Y-Axis
-//     // var y5 = d3.scaleLinear()
-//     //         .domain([
-//     //             Math.min(Math.min(...MinMaxPU), Math.min(...MinMaxSal), Math.min(...MinMaxSmo)), 
-//     //             Math.max(Math.max(...MinMaxPU), Math.max(...MinMaxSal), Math.max(...MinMaxSmo))
-//     //         ])
-//     //         // .domain([
-//     //         //     Math.min(Math.min(...MinMaxLBO) * val_lboSimL, Math.min(...MinMaxPU) * val_puSimL, Math.min(...MinMaxSal) * val_salSimL, Math.min(...MinMaxSmo) * val_smoSimL), 
-//     //         //     Math.max(Math.max(...MinMaxLBO) * val_lboSimL, Math.max(...MinMaxPU) * val_puSimL, Math.max(...MinMaxSal) * val_salSimL, Math.max(...MinMaxSmo) * val_smoSimL)
-//     //         // ])
-//     //         .range([600, 0]);
+    // Draw the Y-Axis
+    var y2 = d3.scaleLinear()
+            .domain([Math.min(...MinMaxSmo), Math.max(...MinMaxSmo)])        
+            .range([200, 0]);
 
-//     // svg_helpAllgraph.append('g')
-//     //         .attr('transform', 'translate(50,25)')   
-//     //         .call(d3.axisLeft(y5).tickValues([]));
-//     // svg_helpAllgraph.append('text')
-//     //         .attr('class', 'scatText')
-//     //         .attr('text-anchor', 'end')
-//     //         .attr('x', -275)
-//     //         .attr('y', 35)
-//     //         .attr('transform', 'rotate(-90)')
-//     //         .text('Parameters')
-//     // for(i = 0; i < valScat.length; i++) {
-//     //     // Saliency
-//     //     svg_helpAllgraph.append('circle')
-//     //                 .attr('class', 'scatCirc')
-//     //                 .attr('index', function() { return i; })
-//     //                 .attr('cx', function(d) { return x5(valScat[i][2]) + 50; } )
-//     //                 // .attr('cy', function(d) { return y5(valScat[i][1] * val_salSimL) + 25; } )
-//     //                 .attr('cy', function(d) { return y5(valScat[i][1]) + 25; } )
-//     //                 .attr('r', 5)
-//     //                 .attr('stroke', '#A8A8A8')
-//     //                 .attr('fill', function(d) { return col3(valScat[i][0])})
-//     //                 .on('mouseover', function() {
-//     //                     svg_helpAllgraph.selectAll('text.finText').remove();
-//     //                     var idMap = d3.select(this).attr('index');
-//     //                     drawHelpermap(valScat[idMap][5]);
-//     //                     svg_helpAllgraph.append('text')
-//     //                                 .attr('class', 'finText')
-//     //                                 .attr('text-anchor', 'end')
-//     //                                 .attr('x', 400)
-//     //                                 .attr('y', 20)
-//     //                                 .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Saliency: ' + d3.format('.2f')(valScat[idMap][1]));
-//     //                 });
-//     //     // Smoothness
-//     //     svg_helpAllgraph.append('circle')
-//     //                 .attr('class', 'scatCirc')
-//     //                 .attr('index', function() { return i; })
-//     //                 .attr('cx', function(d) { return x5(valScat[i][2]) + 50; } )
-//     //                 // .attr('cy', function(d) { return y5(valScat[i][4] * val_smoSimL) + 25; } )
-//     //                 .attr('cy', function(d) { return y5(valScat[i][4]) + 25; } )
-//     //                 .attr('r', 5)
-//     //                 .attr('stroke', '#A8A8A8')
-//     //                 .attr('fill', function(d) { return col2(valScat[i][0])})
-//     //                 .on('mouseover', function() {
-//     //                     svg_helpAllgraph.selectAll('text.finText').remove();
-//     //                     var idMap = d3.select(this).attr('index');
-//     //                     drawHelpermap(valScat[idMap][5]);
-//     //                     svg_helpAllgraph.append('text')
-//     //                                 .attr('class', 'finText')
-//     //                                 .attr('text-anchor', 'end')
-//     //                                 .attr('x', 400)
-//     //                                 .attr('y', 20)
-//     //                                 .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Smoothness: ' + d3.format('.2f')(valScat[idMap][4]));
-//     //                 });
-//     //     // PU
-//     //     svg_helpAllgraph.append('circle')
-//     //                 .attr('class', 'scatCirc')
-//     //                 .attr('index', function() { return i; })
-//     //                 .attr('cx', function(d) { return x5(valScat[i][2]) + 50; } )
-//     //                 // .attr('cy', function(d) { return y5(valScat[i][3] * val_puSimL) + 25; } )
-//     //                 .attr('cy', function(d) { return y5(valScat[i][3]) + 25; } )
-//     //                 .attr('r', 5)
-//     //                 .attr('stroke', '#A8A8A8')
-//     //                 .attr('fill', function(d) { return col1(valScat[i][0])})
-//     //                 .on('mouseover', function() {
-//     //                     svg_helpAllgraph.selectAll('text.finText').remove();
-//     //                     var idMap = d3.select(this).attr('index');
-//     //                     drawHelpermap(valScat[idMap][5]);
-//     //                     svg_helpAllgraph.append('text')
-//     //                                 .attr('class', 'finText')
-//     //                                 .attr('text-anchor', 'end')
-//     //                                 .attr('x', 400)
-//     //                                 .attr('y', 20)
-//     //                                 .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', P.Uniformity: ' + d3.format('.2f')(valScat[idMap][3]));
-//     //                 });
+    var col2 = d3.scaleSequential()
+                .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
+                .interpolator(d3.interpolateReds);
 
-//     // }
-// }
+    svg_helpgraph.append('g')
+            .attr('transform', 'translate(50,275)')   
+            .call(d3.axisLeft(y2).tickValues([]));
+    svg_helpgraph.append('text')
+            .attr('class', 'scatText')
+            .attr('text-anchor', 'end')
+            .attr('x', -325)
+            .attr('y', 35)
+            .attr('transform', 'rotate(-90)')
+            .text('Smoothness')
+    for(i = 0; i < valScat.length; i++) {
+        svg_helpgraph.append('circle')
+                    .attr('class', 'scatCirc')
+                    .attr('index', function() { return i; })
+                    .attr('cx', function(d) { return x2(valScat[i][0]) + 50; } )
+                    .attr('cy', function(d) { return y2(valScat[i][3]) + 275; } )
+                    .attr('r', 5)
+                    .attr('stroke', '#A8A8A8')
+                    .attr('fill', function(d) { return col2(valScat[i][0])})
+                    .on('mouseover', function() {
+                        svg_helpgraph.selectAll('text.finText').remove();
+                        var idMap = d3.select(this).attr('index');
+                        drawHelpermap(valScat[idMap][4]);
+                        svg_helpgraph.append('text')
+                                    .attr('class', 'finText')
+                                    .attr('text-anchor', 'end')
+                                    .attr('x', 400)
+                                    .attr('y', 20)
+                                    .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Smoothness: ' + d3.format('.2f')(valScat[idMap][3]));
+                    })
+                    .append('title').text(function() { return valScat[i][0]; });
+    }
+}

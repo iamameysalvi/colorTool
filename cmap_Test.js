@@ -199,70 +199,100 @@ function drawHistCan() {
             .style('opacity', 1.01)
             .raise();
 
-            // var mLine = d3.mouse(this);
-            // var xLine = mLine[0] / +d3.select('#canvasMain').attr('width')*1000;
-            // svg_linegraph.selectAll('line.hoverLine').remove();
-            // svg_linegraph.append('line')
-            //             .attr('class', 'hoverLine')
-            //             .style('stroke', '#000')
-            //             .style('stroke-dasharray', ('5,5'))
-            //             .style('stroke-width', 1)
-            //             .attr('x1',xLine)
-            //             .attr('y1',25)
-            //             .attr('x2',xLine)
-            //             .attr('y2',175);
+            var mLine = d3.mouse(this);
+            var xLine = mLine[0] / +d3.select('#canvasMain').attr('width')*1000;
+            svg_linegraph.selectAll('line.hoverLine').remove();
+            svg_linegraph.append('line')
+                        .attr('class', 'hoverLine')
+                        .style('stroke', '#000')
+                        .style('stroke-dasharray', ('5,5'))
+                        .style('stroke-width', 1)
+                        .attr('x1',xLine)
+                        .attr('y1',25)
+                        .attr('x2',xLine)
+                        .attr('y2',175);
         });
 }
 
-// GENERATE COLORS FOR DIVERGING CMAP HALVES
-function generateDiv(lum, endPos, selCol) {
+// Generate Random Color
+function genRandom(lum, endPos) {
+    // console.log(lum);
+    var arrColors = [];
+    for(i=0; i<color_dict.length; i++) {
+        if(lum == color_dict[i].lab[0]) {
+            arrColors.push(color_dict[i]);
+        }
+    }
+    // console.log(arrColors);
+    var randCol = arrColors[getRandom(0,arrColors.length)];
+    // console.log(randCol);
+    
     // Adjusted Color Displayability Test
-    var randCol = color_dict[getRandom(0,8325)];
     var testDisplay =  d3.lab(
-        d3.lab(lum, randCol.lab[1], randCol.lab[2]).l, 
-        d3.lab(lum, randCol.lab[1], randCol.lab[2]).a, 
-        d3.lab(lum, randCol.lab[1], randCol.lab[2]).b
+        d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).l,
+        d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).a,
+        d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).b,
     );
     var distDisplay = 1000;
     var distColor = [];
 
     if(testDisplay.displayable() == true) {
+        // console.log('true');
         // Update the color
         var endCol = ({
             lab: randCol.lab,
-            name: randCol.name,
-            fill: randCol.fill,
+            name:  nameDistribution(d3.lab(
+                d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).l,
+                d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).a,
+                d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).b,
+            )),
+            fill: "rgb(" +
+                Math.round(d3.rgb(d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2])).r) + "," +
+                Math.round(d3.rgb(d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2])).g) + "," +
+                Math.round(d3.rgb(d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2])).b) +
+            ")",
             RGB: [
-                d3.rgb(d3.lab(lum, randCol.lab[1], randCol.lab[2])).r, 
-                d3.rgb(d3.lab(lum, randCol.lab[1], randCol.lab[2])).g, 
-                d3.rgb(d3.lab(lum, randCol.lab[1], randCol.lab[2])).b
+                Math.round(d3.rgb(d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2])).r), 
+                Math.round(d3.rgb(d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2])).g), 
+                Math.round(d3.rgb(d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2])).b)
             ],
             LAB: [
-                d3.lab(lum, randCol.lab[1], randCol.lab[2]).l, 
-                d3.lab(lum, randCol.lab[1], randCol.lab[2]).a, 
-                d3.lab(lum, randCol.lab[1], randCol.lab[2]).b
+                d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).l,
+                d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).a,
+                d3.lab(randCol.lab[0], randCol.lab[1], randCol.lab[2]).b,
             ],
             sel: 0
         });
         datasetDrop.splice(endPos, 1, endCol);
     }
     else {
-        for(i=0; i<color_dict.length; i++) {
-            var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+        // console.log('false');
+        for(i=0; i<arrColors.length; i++) {
+            var localDist = Math.sqrt((arrColors[i].lab[0] - testDisplay.l)**2 + (arrColors[i].lab[1] - testDisplay.a)**2 + (arrColors[i].lab[2] - testDisplay.b)**2);
             if(localDist < distDisplay) {
                 distDisplay = localDist;
-                distColor = color_dict[i];
+                distColor = arrColors[i];
             }
         }
         // Update the color
         var endCol = ({
             lab: distColor.lab,
-            name: distColor.name,
-            fill: distColor.fill,
+            name:  nameDistribution(d3.lab(
+                d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+            )),
+            fill:  fill_color(
+                d3.lab(
+                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                )
+            ),
             RGB: [
-                d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r,
-                d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
+                Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
             ],                
             LAB: [
                 d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
@@ -271,65 +301,19 @@ function generateDiv(lum, endPos, selCol) {
             ],
             sel: 0
         });
-        datasetDrop.splice(endPos, 1, endCol);
-    }
-}
 
-function generateEnds(lum, endPos, selCol) {
-    // Adjusted Color Displayability Test
-    var testDisplay =  d3.lab(
-        d3.lab(lum, selCol.LAB[1], selCol.LAB[2]).l, 
-        d3.lab(lum, selCol.LAB[1], selCol.LAB[2]).a, 
-        d3.lab(lum, selCol.LAB[1], selCol.LAB[2]).b
-    );
-    var distDisplay = 1000;
-    var distColor = [];
+        // console.log((d3.lab(
+        //     d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+        //     d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+        //     d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+        // ).toString(16)));
+        // console.log(d3.rgb(d3.lab(
+        //     d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+        //     d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+        //     d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+        // )));
 
-    if(testDisplay.displayable() == true) {
-        // Update the color
-        var endCol = ({
-            lab: selCol.lab,
-            name: selCol.name,
-            fill: selCol.fill,
-            RGB: [
-                d3.rgb(d3.lab(lum, selCol.lab[1], selCol.lab[2])).r, 
-                d3.rgb(d3.lab(lum, selCol.lab[1], selCol.lab[2])).g, 
-                d3.rgb(d3.lab(lum, selCol.lab[1], selCol.lab[2])).b
-            ],
-            LAB: [
-                d3.lab(lum, selCol.lab[1], selCol.lab[2]).l, 
-                d3.lab(lum, selCol.lab[1], selCol.lab[2]).a, 
-                d3.lab(lum, selCol.lab[1], selCol.lab[2]).b
-            ],
-            sel: 0
-        });
-        datasetDrop.splice(endPos, 1, endCol);
-    }
-    else {
-        for(i=0; i<color_dict.length; i++) {
-            var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-            if(localDist < distDisplay) {
-                distDisplay = localDist;
-                distColor = color_dict[i];
-            }
-        }
-        // Update the color
-        var endCol = ({
-            lab: distColor.lab,
-            name: distColor.name,
-            fill: distColor.fill,
-            RGB: [
-                d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r,
-                d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-            ],                
-            LAB: [
-                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-            ],
-            sel: 0
-        });
+        // console.log(endCol);
         datasetDrop.splice(endPos, 1, endCol);
     }
 }
@@ -474,14 +458,16 @@ function drawColor(data, sel) {
                             var lum_max = 100;
                             var samp_lum = dropPos/(paletteLen-1);
                             if(selLum == 'Linear') {
-                                var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
+                                var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
                             }
                             else if (selLum == 'Diverging') {
                                 if(dropPos < paletteLen/2) {
-                                    var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
+                                    var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * 2 * samp_lum)/5);   // For Diverging Profile (Before Midpoint)
+                                    // console.log('before ',lum_exp);
                                 }
                                 else {
-                                    var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-dropPos-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
+                                    var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (paletteLen-dropPos-1)/(Math.floor(paletteLen/2)))/5);   // For Diverging Profile (After Midpoint)
+                                    // console.log('after ',lum_exp);
                                 }
                             }
 
@@ -493,6 +479,7 @@ function drawColor(data, sel) {
                             );
                             var distDisplay = 1000;
                             var distColor = [];
+                            var selColors = [];
 
                             if(testDisplay.displayable() == true) {
                                 // Update the color
@@ -502,9 +489,9 @@ function drawColor(data, sel) {
                                     name: rectDrop.data()[0].name,
                                     fill: rectDrop.data()[0].fill,
                                     RGB: [
-                                        d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r, 
-                                        d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g, 
-                                        d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b
+                                        Math.round(d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r), 
+                                        Math.round(d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g), 
+                                        Math.round(d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b)
                                     ],                
                                     LAB: [
                                         d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).l, 
@@ -516,12 +503,25 @@ function drawColor(data, sel) {
                             }
                             else {
                                 for(i=0; i<color_dict.length; i++) {
-                                    var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                                    if(localDist < distDisplay) {
-                                        distDisplay = localDist;
-                                        distColor = color_dict[i];
+                                    if(testDisplay.l == color_dict[i].lab[0]) {
+                                        // console.log(selColors);
+                                        selColors.push(color_dict[i]);
+                                        for(j=0; j<selColors.length; j++) {
+                                            var localDist = Math.sqrt((selColors[j].lab[0] - testDisplay.l)**2 + (selColors[j].lab[1] - testDisplay.a)**2 + (selColors[j].lab[2] - testDisplay.b)**2);
+                                            if(localDist < distDisplay) {
+                                                distDisplay = localDist;
+                                                distColor = selColors[j];
+                                            }
+                                        }
                                     }
                                 }
+                                // for(i=0; i<color_dict.length; i++) {
+                                //     var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+                                //     if(localDist < distDisplay) {
+                                //         distDisplay = localDist;
+                                //         distColor = color_dict[i];
+                                //     }
+                                // }
                                 // Update the color
                                 var dropRect = ({
                                     pos: dropPos,
@@ -529,9 +529,9 @@ function drawColor(data, sel) {
                                     name: distColor.name,
                                     fill: distColor.fill,
                                     RGB: [
-                                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
+                                        Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r), 
+                                        Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                                        Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
                                     ],                
                                     LAB: [
                                         d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
@@ -548,12 +548,15 @@ function drawColor(data, sel) {
                             drawColor(data, sel);
                             svg_colormap.selectAll('text.sliderText').remove();
 
-                            if(countDrop == 1) {
-                                initSinglePos(dropPos, dropRect);
-                            }
-                            else {
-                                initMultPos(dropPos, dropRect);
-                            }
+                            // Call Initialization
+                            initPos(dropPos, dropRect);
+
+                            // if(countDrop == 1) {
+                            //     initSinglePos(dropPos, dropRect);
+                            // }
+                            // else {
+                            //     initMultPos(dropPos, dropRect);
+                            // }
                         }
                         else {
                             svg_colormap.selectAll('rect.addCol').remove();
@@ -565,7 +568,7 @@ function drawColor(data, sel) {
 
 // DRAW DROPPED COLOR BOXES
 function drawDropCol(pos, wd, rectCol) {
-    countDrop++;
+    // countDrop++;
     // Draw Added Colors
     svg_colormap.append('rect')
                 .attr('class', 'dropCol')
@@ -577,353 +580,65 @@ function drawDropCol(pos, wd, rectCol) {
                 .attr('stroke', '#000');
 }
 
-// INITIALIZATION FOR 1 COLOR
-function initSinglePos(pos, rectCol) {
+// INITALIZATION FOR ALL COLORS
+function initPos(pos, rectCol) {
     dropArr.push(pos);
-    datasetDrop.push(rectCol);
-    drawColormap(datasetDrop);
-    drawLinegraph(datasetDrop);
+    // drawColormap(datasetDrop);
+    // drawLinegraph(datasetDrop);
     var lum_min = 0;
     var lum_max = 100;
 
-    // 1 color added -> linear
+    // Linear
     if(selLum == 'Linear') {
-        for(var k=0; k<(paletteLen);k++) {
+        countDrop++;
+        for(var k=0; k<(paletteLen); k++) {
             var samp_lum = k/(paletteLen-1);
-            var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
+            var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
 
-            // Adjusted Color Displayability Test
-            var testDisplay =  d3.lab(
-                d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-            );
-
-            var distDisplay = 1000;
-            var distColor = [];
-
-            if(testDisplay.displayable() == true) {
-                // Update the color
-                datasetDrop.push({
-                    lab: rectCol.lab,
-                    name: rectCol.name,
-                    fill: rectCol.fill,
-                    RGB: [
-                        d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
-                        d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
-                        d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
-                    ],
-                    LAB: [
-                        d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                        d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                        d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-                    ],
-                    sel: 2
-                });
+            if(countDrop == 1) {
+                genRandom(lum_exp, k);
             }
             else {
-                for(i=0; i<color_dict.length; i++) {
-                    var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                    if(localDist < distDisplay) {
-                        distDisplay = localDist;
-                        distColor = color_dict[i];
-                    }
-                }
-                // Update the color
-                datasetDrop.push({
-                    lab: distColor.lab,
-                    name: distColor.name,
-                    fill: distColor.fill,
-                    RGB: [
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                    ],                
-                    LAB: [
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                    ],
-                    sel: 2
-                });
-            }
-        }
-        datasetDrop.splice(pos + 1, 1, rectCol);
-        datasetDrop.splice(0, 1);
-    }
-
-    // 1 color added -> diverging
-    else if (selLum == 'Diverging') {
-        // DropPos @ First Half
-        if(pos < paletteLen/2) {
-            for(var k=0; k<(paletteLen/2);k++) {
-                var samp_lum = k/(paletteLen-1);
-                var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
-
-                // Adjusted Color Displayability Test
-                var testDisplay =  d3.lab(
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-                );
-                var distDisplay = 1000;
-                var distColor = [];
-
-                if(testDisplay.displayable() == true) {
-                    // Update the color
-                    datasetDrop.push({
-                        lab: rectCol.lab,
-                        name: rectCol.name,
-                        fill: rectCol.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
-                            d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
-                            d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
-                        ],
-                        LAB: [
-                            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-                        ],
-                        sel: 2
-                    });
-                }
-                else {
-                    for(i=0; i<color_dict.length; i++) {
-                        var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                        if(localDist < distDisplay) {
-                            distDisplay = localDist;
-                            distColor = color_dict[i];
-                        }
-                    }
-                    // Update the color
-                    datasetDrop.push({
-                        lab: distColor.lab,
-                        name: distColor.name,
-                        fill: distColor.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                        ],                
-                        LAB: [
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                        ],
-                        sel: 2
-                    });
+                if(datasetDrop[k].sel == 0) {
+                    genRandom(lum_exp, k);
                 }
             }
-            datasetDrop.splice(pos + 1, 1, rectCol);
-            datasetDrop.splice(0, 1);
-
-            // Generate Random Color at Second Half
-            var distDiv = 0;
-            while(distDiv < 0.75) {
-                var randCol = color_dict[getRandom(0,8325)];
-                var distSel = c3.color[index(d3.color(rectCol.fill))];
-                var distRand = c3.color[index(d3.color(randCol.fill))];
-                var distDiv = nameDifference(distSel, distRand);                
-            }
-            for(var k=(Math.floor(paletteLen/2)+1); k<paletteLen; k++) {
-                var samp_lum = k/(paletteLen-1);
-                var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
-                // Adjusted Color Displayability Test
-                var testDisplay =  d3.lab(
-                    d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
-                    d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
-                    d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
-                );
-                var distDisplay = 1000;
-                var distColor = [];
-
-                if(testDisplay.displayable() == true) {
-                    // Update the color
-                    datasetDrop.push({
-                        lab: randCol.lab,
-                        name: randCol.name,
-                        fill: randCol.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).r, 
-                            d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).g, 
-                            d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).b
-                        ],
-                        LAB: [
-                            d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
-                            d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
-                            d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
-                        ],
-                        sel: 2
-                    });
-                }
-                else {
-                    for(i=0; i<color_dict.length; i++) {
-                        var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                        if(localDist < distDisplay) {
-                            distDisplay = localDist;
-                            distColor = color_dict[i];
-                        }
-                    }
-                    // Update the color
-                    datasetDrop.push({
-                        lab: distColor.lab,
-                        name: distColor.name,
-                        fill: distColor.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                        ],                
-                        LAB: [
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                        ],
-                        sel: 2
-                    });
-                }
-                // var samp_lum = k/(paletteLen-1);
-                // var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
-                // generateDiv(lum_exp, k, rectCol);
-            }
-        }
-        // DropPos @ Second Half
-        else if(pos >= paletteLen/2) {
-            // Generate Random Color at Second Half
-            var distDiv = 0;
-            while(distDiv < 0.75) {
-                var randCol = color_dict[getRandom(0,8325)];
-                var distSel = c3.color[index(d3.color(rectCol.fill))];
-                var distRand = c3.color[index(d3.color(randCol.fill))];
-                var distDiv = nameDifference(distSel, distRand);                
-            }
-            for(var k=0; k<(paletteLen/2);k++) {
-                var samp_lum = k/(paletteLen-1);
-                var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
-                // Adjusted Color Displayability Test
-                var testDisplay =  d3.lab(
-                    d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
-                    d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
-                    d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
-                );
-                var distDisplay = 1000;
-                var distColor = [];
-
-                if(testDisplay.displayable() == true) {
-                    // Update the color
-                    datasetDrop.push({
-                        lab: randCol.lab,
-                        name: randCol.name,
-                        fill: randCol.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).r, 
-                            d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).g, 
-                            d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).b
-                        ],
-                        LAB: [
-                            d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
-                            d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
-                            d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
-                        ],
-                        sel: 2
-                    });
-                }
-                else {
-                    for(i=0; i<color_dict.length; i++) {
-                        var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                        if(localDist < distDisplay) {
-                            distDisplay = localDist;
-                            distColor = color_dict[i];
-                        }
-                    }
-                    // Update the color
-                    datasetDrop.push({
-                        lab: distColor.lab,
-                        name: distColor.name,
-                        fill: distColor.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                        ],                
-                        LAB: [
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                        ],
-                        sel: 2
-                    });
-                }
-            }
-            // for(var k=0; k<(paletteLen/2);k++) {
-            //     var samp_lum = k/(paletteLen-1);
-            //     var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
-            //     generateDiv(lum_exp, k, rectCol);
-            // }
-
-            for(var k=(Math.floor(paletteLen/2)+1); k<paletteLen; k++) {
-                var samp_lum = k/(paletteLen-1);
-                var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
-
-                // Adjusted Color Displayability Test
-                var testDisplay =  d3.lab(
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-                );
-                var distDisplay = 1000;
-                var distColor = [];
-                if(testDisplay.displayable() == true) {
-                    // Update the color
-                    datasetDrop.push({
-                        lab: rectCol.lab,
-                        name: rectCol.name,
-                        fill: rectCol.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
-                            d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
-                            d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
-                        ],
-                        LAB: [
-                            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-                        ],
-                        sel: 2
-                    });
-                }
-                else {
-                    for(i=0; i<color_dict.length; i++) {
-                        var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                        if(localDist < distDisplay) {
-                            distDisplay = localDist;
-                            distColor = color_dict[i];
-                        }
-                    }
-                    // Update the color
-                    datasetDrop.push({
-                        lab: distColor.lab,
-                        name: distColor.name,
-                        fill: distColor.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                            d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                        ],                
-                        LAB: [
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                        ],
-                        sel: 2
-                    });
-                }
-            }
-            datasetDrop.splice(pos + 1, 1, rectCol);
-            datasetDrop.splice(0, 1);
         }
     }
+    // Diverging
+    else if(selLum == 'Diverging') {
+        countDrop++;
+        for(var k=0; k<(paletteLen/2); k++) {
+            var samp_lum = k/(paletteLen-1);
+            var lum_exp = 5 * Math.round((Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum))/5);   // For Diverging Profile (Before Midpoint)
+            if(countDrop == 1) {
+                genRandom(lum_exp, k);
+            }
+            else {
+                if(datasetDrop[k].sel == 0) {
+                    genRandom(lum_exp, k);
+                }
+            }
+        }
+        for(var k=Math.floor(paletteLen/2 + 1); k<(paletteLen); k++) {
+            var samp_lum = k/(paletteLen-1);
+            var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2)))/5);   // For Diverging Profile (After Midpoint)
+            if(countDrop == 1) {
+                genRandom(lum_exp, k);
+            }
+            else {
+                if(datasetDrop[k].sel == 0) {
+                    genRandom(lum_exp, k);
+                }
+            }
+        }
+    }
+
+    // console.log(datasetDrop);
+
+    datasetDrop.unshift(rectCol);
+    datasetDrop.splice(pos + 1, 1, rectCol);
+    datasetDrop.splice(0, 1);
 
     // Call Web Worker (Algorithm)
 
@@ -932,492 +647,377 @@ function initSinglePos(pos, rectCol) {
     myWorker = new Worker('worker.js');
 
     // Post Message in Worker
-    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
     myWorker.onmessage = function(e) {
         drawColormap(e.data[0]);
         drawLinegraph(e.data[0]);
-        // drawScatter(e.data[1]);
+        drawScatter(e.data[1]);
         drawPlot(e.data[0]);
         // loader.style.visibility = "hidden";
     }
 }
 
-// INITIALIZATION FOR MULTIPLE COLORS
-function initMultPos(pos, rectCol) {
-    if(datasetDrop.length > paletteLen) {
-        datasetDrop.splice(datasetDrop.length-1, 1);
-    }
+// INITIALIZATION FOR 1 COLOR
+// function initSinglePos(pos, rectCol) {
+//     dropArr.push(pos);
+//     datasetDrop.push(rectCol);
+//     drawColormap(datasetDrop);
+//     drawLinegraph(datasetDrop);
+//     var lum_min = 0;
+//     var lum_max = 100;
 
-    dropArr.push(pos);
-    dropArr.sort((a, b) => (a - b));
+//     // 1 color added -> linear
+//     if(selLum == 'Linear') {
+//         for(var k=0; k<(paletteLen);k++) {
+//             var samp_lum = k/(paletteLen-1);
+//             var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
 
-    var lum_min = 0;
-    var lum_max = 100;
-    var samp_lum = pos/(paletteLen-1);
+//             // Adjusted Color Displayability Test
+//             var testDisplay =  d3.lab(
+//                 d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
+//                 d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
+//                 d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
+//             );
 
-    // multiple colors added -> linear
-    if(selLum == 'Linear') {
-        var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
+//             var distDisplay = 1000;
+//             var distColor = [];
 
-        // Adjusted Color Displayability Test
-        var testDisplay =  d3.lab(
-            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-            d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-        );
-        var distDisplay = 1000;
-        var distColor = [];
+//             if(testDisplay.displayable() == true) {
+//                 // Update the color
+//                 datasetDrop.push({
+//                     lab: rectCol.lab,
+//                     name: rectCol.name,
+//                     fill: rectCol.fill,
+//                     RGB: [
+//                         d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
+//                         d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
+//                         d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
+//                     ],
+//                     LAB: [
+//                         d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
+//                         d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
+//                         d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
+//                     ],
+//                     sel: 2
+//                 });
+//             }
+//             else {
+//                 for(i=0; i<color_dict.length; i++) {
+//                     var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+//                     if(localDist < distDisplay) {
+//                         distDisplay = localDist;
+//                         distColor = color_dict[i];
+//                     }
+//                 }
+//                 // Update the color
+//                 datasetDrop.push({
+//                     lab: distColor.lab,
+//                     name: distColor.name,
+//                     fill: distColor.fill,
+//                     RGB: [
+//                         d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
+//                         d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
+//                         d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
+//                     ],                
+//                     LAB: [
+//                         d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+//                         d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+//                         d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+//                     ],
+//                     sel: 2
+//                 });
+//             }
+//         }
+//         datasetDrop.splice(pos + 1, 1, rectCol);
+//         datasetDrop.splice(0, 1);
+//     }
 
-        if(testDisplay.displayable() == true) {
-            // Update the color
-            var tempRect = ({
-                lab: rectCol.lab,
-                name: rectCol.name,
-                fill: rectCol.fill,
-                // RGB: [
-                //     d3.rgb(d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2])).r, 
-                //     d3.rgb(d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2])).g, 
-                //     d3.rgb(d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2])).b
-                // ],                
-                // LAB: [
-                //     d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2]).l, 
-                //     d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2]).a, 
-                //     d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2]).b
-                // ],
-                RGB: [
-                    d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
-                    d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
-                    d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
-                ],
-                LAB: [
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                    d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-                ],
-                sel: 2
-            });
-        }
-        else {
-            for(i=0; i<color_dict.length; i++) {
-                var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                if(localDist < distDisplay) {
-                    distDisplay = localDist;
-                    distColor = color_dict[i];
-                }
-            }
-            // Update the color
-            var tempRect = ({
-                lab: distColor.lab,
-                name: distColor.name,
-                fill: distColor.fill,
-                RGB: [
-                    d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                    d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                    d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                ],                
-                LAB: [
-                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                ],
-                sel: 2
-            });
-        }
-        datasetDrop.splice(pos, 1, tempRect);
+//     // 1 color added -> diverging
+//     else if (selLum == 'Diverging') {
+//         // DropPos @ First Half
+//         if(pos < paletteLen/2) {
+//             for(var k=0; k<(paletteLen/2);k++) {
+//                 var samp_lum = k/(paletteLen-1);
+//                 var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
 
-        for(var p=0; p<dropArr.length - 1; p++) {
-            var ptsSmo = [];                    
-            var edgesSmo = [];
-            var edgesSmoNew = [];
+//                 // Adjusted Color Displayability Test
+//                 var testDisplay =  d3.lab(
+//                     d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
+//                     d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
+//                     d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
+//                 );
+//                 var distDisplay = 1000;
+//                 var distColor = [];
 
-            ptsSmo.push([d3.lab((datasetDrop[dropArr[p]].LAB)[0], (datasetDrop[dropArr[p]].LAB)[1], (datasetDrop[dropArr[p]].LAB)[2])]);
-            ptsSmo.push([d3.lab((datasetDrop[dropArr[p+1]].LAB)[0], (datasetDrop[dropArr[p+1]].LAB)[1], (datasetDrop[dropArr[p+1]].LAB)[2])]);
+//                 if(testDisplay.displayable() == true) {
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: rectCol.lab,
+//                         name: rectCol.name,
+//                         fill: rectCol.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
+//                             d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
+//                             d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
+//                         ],
+//                         LAB: [
+//                             d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
+//                             d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
+//                             d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//                 else {
+//                     for(i=0; i<color_dict.length; i++) {
+//                         var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+//                         if(localDist < distDisplay) {
+//                             distDisplay = localDist;
+//                             distColor = color_dict[i];
+//                         }
+//                     }
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: distColor.lab,
+//                         name: distColor.name,
+//                         fill: distColor.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
+//                         ],                
+//                         LAB: [
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//             }
+//             datasetDrop.splice(pos + 1, 1, rectCol);
+//             datasetDrop.splice(0, 1);
 
-            // Create edges for points to neighbors
-            for(var i = 0; i < ptsSmo.length - 1; i++) {
-                edgesSmo.push({ source: ptsSmo[i], target: ptsSmo[i+1]});
-                for (const key in edgesSmo) {
-                    if (edgesSmo[key].target === undefined) {
-                        delete edgesSmo[key];
-                    }
-                }
-                edgesSmoNew = edgesSmo.filter((a) => a);
-            }
+//             // Generate Random Color at Second Half
+//             var distDiv = 0;
+//             while(distDiv < 0.75) {
+//                 var randCol = color_dict[getRandom(0,8325)];
+//                 var distSel = c3.color[index(d3.color(rectCol.fill))];
+//                 var distRand = c3.color[index(d3.color(randCol.fill))];
+//                 var distDiv = nameDifference(distSel, distRand);                
+//             }
+//             for(var k=(Math.floor(paletteLen/2)+1); k<paletteLen; k++) {
+//                 var samp_lum = k/(paletteLen-1);
+//                 var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
+//                 // Adjusted Color Displayability Test
+//                 var testDisplay =  d3.lab(
+//                     d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
+//                     d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
+//                     d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
+//                 );
+//                 var distDisplay = 1000;
+//                 var distColor = [];
 
-            var midL = ((edgesSmoNew[0].target)[0].l - (edgesSmoNew[0].source)[0].l)/(dropArr[p+1] - dropArr[p]);
-            var mida = ((edgesSmoNew[0].target)[0].a - (edgesSmoNew[0].source)[0].a)/(dropArr[p+1] - dropArr[p]);
-            var midb = ((edgesSmoNew[0].target)[0].b - (edgesSmoNew[0].source)[0].b)/(dropArr[p+1] - dropArr[p]);
+//                 if(testDisplay.displayable() == true) {
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: randCol.lab,
+//                         name: randCol.name,
+//                         fill: randCol.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).r, 
+//                             d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).g, 
+//                             d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).b
+//                         ],
+//                         LAB: [
+//                             d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
+//                             d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
+//                             d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//                 else {
+//                     for(i=0; i<color_dict.length; i++) {
+//                         var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+//                         if(localDist < distDisplay) {
+//                             distDisplay = localDist;
+//                             distColor = color_dict[i];
+//                         }
+//                     }
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: distColor.lab,
+//                         name: distColor.name,
+//                         fill: distColor.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
+//                         ],                
+//                         LAB: [
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//                 // var samp_lum = k/(paletteLen-1);
+//                 // var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
+//                 // generateDiv(lum_exp, k, rectCol);
+//             }
+//         }
+//         // DropPos @ Second Half
+//         else if(pos >= paletteLen/2) {
+//             // Generate Random Color at Second Half
+//             var distDiv = 0;
+//             while(distDiv < 0.75) {
+//                 var randCol = color_dict[getRandom(0,8325)];
+//                 var distSel = c3.color[index(d3.color(rectCol.fill))];
+//                 var distRand = c3.color[index(d3.color(randCol.fill))];
+//                 var distDiv = nameDifference(distSel, distRand);                
+//             }
+//             for(var k=0; k<(paletteLen/2);k++) {
+//                 var samp_lum = k/(paletteLen-1);
+//                 var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
+//                 // Adjusted Color Displayability Test
+//                 var testDisplay =  d3.lab(
+//                     d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
+//                     d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
+//                     d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
+//                 );
+//                 var distDisplay = 1000;
+//                 var distColor = [];
 
-            for(i = 1; i < (dropArr[p+1] - dropArr[p]); i++) {
-                // Adjusted Color Displayability Test
-                var testMidDisplay =  d3.lab(
-                    d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).l,
-                    d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).a,
-                    d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).b
-                );
-                var distMidDisplay = 1000;
-                var distMidColor = [];
+//                 if(testDisplay.displayable() == true) {
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: randCol.lab,
+//                         name: randCol.name,
+//                         fill: randCol.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).r, 
+//                             d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).g, 
+//                             d3.rgb(d3.lab(lum_exp, randCol.lab[1], randCol.lab[2])).b
+//                         ],
+//                         LAB: [
+//                             d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).l, 
+//                             d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).a, 
+//                             d3.lab(lum_exp, randCol.lab[1], randCol.lab[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//                 else {
+//                     for(i=0; i<color_dict.length; i++) {
+//                         var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+//                         if(localDist < distDisplay) {
+//                             distDisplay = localDist;
+//                             distColor = color_dict[i];
+//                         }
+//                     }
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: distColor.lab,
+//                         name: distColor.name,
+//                         fill: distColor.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
+//                         ],                
+//                         LAB: [
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//             }
+//             // for(var k=0; k<(paletteLen/2);k++) {
+//             //     var samp_lum = k/(paletteLen-1);
+//             //     var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
+//             //     generateDiv(lum_exp, k, rectCol);
+//             // }
 
-                if(testMidDisplay.displayable() == true) {
-                    // Update the color
-                    var midCol = ({
-                        fill: "rgb(" +
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).r + "," +
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).g + "," +
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).b +
-                            ")",
-                        RGB: [
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).r, 
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).g, 
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).b
-                        ],
-                        LAB: [
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).l,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).a,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).b
-                        ],
-                        name:  nameDistribution(d3.lab(
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).l,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).a,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).b
-                        )),
-                        sel: 2
-                    });
-                }
-                else {
-                    for(j=0; j<color_dict.length; j++) {
-                        var localDist = Math.sqrt((color_dict[j].lab[0] - testMidDisplay.l)**2 + (color_dict[j].lab[1] - testMidDisplay.a)**2 + (color_dict[j].lab[2] - testMidDisplay.b)**2);
-                        if(localDist < distMidDisplay) {
-                            distMidDisplay = localDist;
-                            distMidColor = color_dict[j];
-                        }
-                    }
-                    // Update the color
-                    var midCol = ({
-                        lab: distMidColor.lab,
-                        name: distMidColor.name,
-                        fill: distMidColor.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i))).r, 
-                            d3.rgb(d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i))).g, 
-                            d3.rgb(d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i))).b
-                        ],                
-                        LAB: [
-                            d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i)).l, 
-                            d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i)).a, 
-                            d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i)).b
-                        ],
-                        sel: 2
-                    });
-                }
-                datasetDrop.splice(dropArr[p] + i, 1, midCol);
-            }
-            
-            // If ends are not selected
-            if(pos < paletteLen/2) {
-                // If the first dropPos is not 0
-                if(dropArr[0] > 0) {
-                    for(var k=0; k<dropArr[0]; k++) {
-                        var samp_lum = k/(paletteLen-1);
-                        var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
-                        generateEnds(lum_exp, k, rectCol);
-                    }
-                }
-                for(var k=(dropArr[dropArr.length-1])+1; k<paletteLen; k++) {
-                    var samp_lum = k/(paletteLen-1);
-                    var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
-                    generateEnds(lum_exp, k, rectCol);
-                }
-            }
-            else if(pos >= paletteLen/2) {
-                // If the last dropPos is not dataset length
-                if(dropArr[dropArr.length-1] < (paletteLen-1)) {
-                    for(var k=(dropArr[dropArr.length-1])+1; k<paletteLen; k++) {
-                        var samp_lum = k/(paletteLen-1);
-                        var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
-                        generateEnds(lum_exp, k, rectCol);
-                    }
-                }
-                for(var k=0; k<dropArr[0]; k++) {
-                    var samp_lum = k/(paletteLen-1);
-                    var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
-                    generateEnds(lum_exp, k, rectCol);
-                }
-            }
-        }
-    }
+//             for(var k=(Math.floor(paletteLen/2)+1); k<paletteLen; k++) {
+//                 var samp_lum = k/(paletteLen-1);
+//                 var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
 
-    // multiple colors added -> diverging
-    else if (selLum == 'Diverging') {
-        // DropPos @ First Half
-        if(pos < paletteLen/2) {
-            var samp_lum = pos/(paletteLen-1);
-            var lum_exp = Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum);   // For Diverging Profile (Before Midpoint)
+//                 // Adjusted Color Displayability Test
+//                 var testDisplay =  d3.lab(
+//                     d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
+//                     d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
+//                     d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
+//                 );
+//                 var distDisplay = 1000;
+//                 var distColor = [];
+//                 if(testDisplay.displayable() == true) {
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: rectCol.lab,
+//                         name: rectCol.name,
+//                         fill: rectCol.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
+//                             d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
+//                             d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
+//                         ],
+//                         LAB: [
+//                             d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
+//                             d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
+//                             d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//                 else {
+//                     for(i=0; i<color_dict.length; i++) {
+//                         var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+//                         if(localDist < distDisplay) {
+//                             distDisplay = localDist;
+//                             distColor = color_dict[i];
+//                         }
+//                     }
+//                     // Update the color
+//                     datasetDrop.push({
+//                         lab: distColor.lab,
+//                         name: distColor.name,
+//                         fill: distColor.fill,
+//                         RGB: [
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
+//                             d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
+//                         ],                
+//                         LAB: [
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+//                             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+//                         ],
+//                         sel: 2
+//                     });
+//                 }
+//             }
+//             datasetDrop.splice(pos + 1, 1, rectCol);
+//             datasetDrop.splice(0, 1);
+//         }
+//     }
 
-            // Adjusted Color Displayability Test
-            var testDisplay =  d3.lab(
-                d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-            );
-            var distDisplay = 1000;
-            var distColor = [];
+//     // Call Web Worker (Algorithm)
 
-            if(testDisplay.displayable() == true) {
-                // Update the color
-                var tempRect = ({
-                    lab: rectCol.lab,
-                    name: rectCol.name,
-                    fill: rectCol.fill,
-                    RGB: [
-                        d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).r, 
-                        d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).g, 
-                        d3.rgb(d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2])).b
-                    ],
-                    LAB: [
-                        d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).l, 
-                        d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).a, 
-                        d3.lab(lum_exp, rectCol.LAB[1], rectCol.LAB[2]).b
-                    ],
-                    // RGB: [
-                    //     d3.rgb(d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2])).r, 
-                    //     d3.rgb(d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2])).g, 
-                    //     d3.rgb(d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2])).b
-                    // ],                
-                    // LAB: [
-                    //     d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2]).l, 
-                    //     d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2]).a, 
-                    //     d3.lab(lum_exp,rectCol.lab.split(",").map(x=>+x)[1],rectCol.lab.split(",").map(x=>+x)[2]).b
-                    // ],
-                    sel: 2
-                });
-            }
-            else {
-                for(i=0; i<color_dict.length; i++) {
-                    var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                    if(localDist < distDisplay) {
-                        distDisplay = localDist;
-                        distColor = color_dict[i];
-                    }
-                }
-                // Update the color
-                var tempRect = ({
-                    lab: distColor.lab,
-                    name: distColor.name,
-                    fill: distColor.fill,
-                    RGB: [
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                    ],                
-                    LAB: [
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                    ],
-                    sel: 2
-                });
-            }
-            datasetDrop.splice(pos, 1, tempRect);
-        }
-        // DropPos @ Second Half
-        else if(pos >= paletteLen/2) {
-            var samp_lum = pos/(paletteLen-1);
-            // var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
-            var lum_exp = lum_min + (lum_max-lum_min) * (paletteLen-pos-1)/(Math.floor(paletteLen/2))   // For Diverging Profile (After Midpoint)
+//     // Terminate old Worker and run new Worker
+//     myWorker.terminate();
+//     myWorker = new Worker('worker.js');
 
-            // Adjusted Color Displayability Test
-            var testDisplay =  d3.lab(
-                d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2]).l, 
-                d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2]).a, 
-                d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2]).b
-            );
-            var distDisplay = 1000;
-            var distColor = [];
-
-            if(testDisplay.displayable() == true) {
-                // Update the color
-                var tempRect = ({
-                    lab: rectCol.lab,
-                    name: rectCol.name,
-                    fill: rectCol.fill,
-                    RGB: [
-                        d3.rgb(d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2])).r, 
-                        d3.rgb(d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2])).g, 
-                        d3.rgb(d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2])).b
-                    ],
-                    LAB: [
-                        d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2]).l, 
-                        d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2]).a, 
-                        d3.lab(lum_exp, rectCol.lab[1], rectCol.lab[2]).b
-                    ],
-                    sel: 2
-                });
-            }
-            else {
-                for(i=0; i<color_dict.length; i++) {
-                    var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                    if(localDist < distDisplay) {
-                        distDisplay = localDist;
-                        distColor = color_dict[i];
-                    }
-                }
-
-                // Update the color
-                var tempRect = ({
-                    lab: distColor.lab,
-                    name: distColor.name,
-                    fill: distColor.fill,
-                    RGB: [
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r, 
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g, 
-                        d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b
-                    ],                
-                    LAB: [
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                    ],
-                    sel: 2
-                });
-            }
-
-            datasetDrop.splice(pos, 1, tempRect);
-        }
-
-        for(var p=0; p<dropArr.length - 1; p++) {
-            var ptsSmo = [];                    
-            var edgesSmo = [];
-            var edgesSmoNew = [];
-
-            ptsSmo.push([d3.lab((datasetDrop[dropArr[p]].LAB)[0], (datasetDrop[dropArr[p]].LAB)[1], (datasetDrop[dropArr[p]].LAB)[2])]);
-            ptsSmo.push([d3.lab((datasetDrop[dropArr[p+1]].LAB)[0], (datasetDrop[dropArr[p+1]].LAB)[1], (datasetDrop[dropArr[p+1]].LAB)[2])]);
-
-            // Create edges for points to neighbors
-            for(var i = 0; i < ptsSmo.length - 1; i++) {
-                edgesSmo.push({ source: ptsSmo[i], target: ptsSmo[i+1]});
-                for (const key in edgesSmo) {
-                    if (edgesSmo[key].target === undefined) {
-                        delete edgesSmo[key];
-                    }
-                }
-                edgesSmoNew = edgesSmo.filter((a) => a);
-            }
-            // console.log(edgesSmoNew);
-
-            var midL = Math.abs(((edgesSmoNew[0].target)[0].l - (edgesSmoNew[0].source)[0].l)/(dropArr[p+1] - dropArr[p]));
-            var mida = ((edgesSmoNew[0].target)[0].a - (edgesSmoNew[0].source)[0].a)/(dropArr[p+1] - dropArr[p]);
-            var midb = ((edgesSmoNew[0].target)[0].b - (edgesSmoNew[0].source)[0].b)/(dropArr[p+1] - dropArr[p]);
-
-            console.log(midL);
-
-            for(i = 1; i < (dropArr[p+1] - dropArr[p]); i++) {
-
-                // Adjusted Color Displayability Test
-                var testMidDisplay =  d3.lab(
-                    d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).l,
-                    d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).a,
-                    d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).b
-                );
-                var distMidDisplay = 1000;
-                var distMidColor = [];
-
-                // console.log("MID");
-                // console.log(testMidDisplay.displayable());
-                // console.log(testMidDisplay);
-
-                if(testMidDisplay.displayable() == true) {
-                    // Update the color
-                    var midCol = ({
-                        fill: "rgb(" +
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).r + "," +
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).g + "," +
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).b +
-                            ")",
-                        RGB: [
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).r, 
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).g, 
-                            d3.rgb((d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))),d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))))).b
-                        ],
-                        LAB: [
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).l,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).a,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).b
-                        ],
-                        name:  nameDistribution(d3.lab(
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).l,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).a,
-                            d3.lab(((edgesSmoNew[0].source)[0].l + (midL*i)), ((edgesSmoNew[0].source)[0].a + (mida*i)), ((edgesSmoNew[0].source)[0].b + (midb*i))).b
-                        )),
-                        sel: 2
-                    });
-                }
-                else {
-                    for(j=0; j<color_dict.length; j++) {
-                        var localDist = Math.sqrt((color_dict[j].lab[0] - testMidDisplay.l)**2 + (color_dict[j].lab[1] - testMidDisplay.a)**2 + (color_dict[j].lab[2] - testMidDisplay.b)**2);
-                        if(localDist < distMidDisplay) {
-                            distMidDisplay = localDist;
-                            distMidColor = color_dict[j];
-                        }
-                    }
-                    // Update the color
-                    var midCol = ({
-                        lab: distMidColor.lab,
-                        name: distMidColor.name,
-                        fill: distMidColor.fill,
-                        RGB: [
-                            d3.rgb(d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i))).r, 
-                            d3.rgb(d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i))).g, 
-                            d3.rgb(d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i))).b
-                        ],                
-                        LAB: [
-                            d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i)).l, 
-                            d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i)).a, 
-                            d3.lab(distMidColor.lab[0] + (midL*i),distMidColor.lab[1] + (mida*i),distMidColor.lab[2] + (midb*i)).b
-                        ],
-                        sel: 2
-                    });
-                }
-
-                datasetDrop.splice(dropArr[p] + i, 1, midCol);
-            }
-            
-            // If ends are not selected
-            if(pos < paletteLen/2) {
-                // If the first dropPos is not 0
-                if(dropArr[0] > 0) {
-                    for(var k=0; k<dropArr[0]; k++) {
-                        var samp_lum = k/(paletteLen-1);
-                        var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
-                        generateEnds(lum_exp, k, rectCol);
-                    }
-                }
-            }
-            else if(pos >= paletteLen/2) {
-                // If the last dropPos is not dataset length
-                if(dropArr[dropArr.length-1] < (paletteLen-1)) {
-                    for(var k=(dropArr[dropArr.length-1])+1; k<paletteLen; k++) {
-                        var samp_lum = k/(paletteLen-1);
-                        var lum_exp = lum_min + (lum_max-lum_min) * samp_lum;       // For Linear Profile
-                        generateEnds(lum_exp, k, rectCol);
-                    }
-                }
-            }
-        }
-    }
-
-    // Call Web Worker (Algorithm)
-    // Terminate old Worker and run new Worker
-    myWorker.terminate();
-    myWorker = new Worker('worker.js');
-
-    // Post Message in Worker
-    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
-    myWorker.onmessage = function(e) {
-        drawColormap(e.data[0]);
-        drawLinegraph(e.data[0]);
-        // drawScatter(e.data[1]);
-        drawPlot(e.data[0]);
-        // loader.style.visibility = "hidden";
-    }
-}
+//     // Post Message in Worker
+//     myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+//     myWorker.onmessage = function(e) {
+//         drawColormap(e.data[0]);
+//         drawLinegraph(e.data[0]);
+//         // drawScatter(e.data[1]);
+//         drawPlot(e.data[0]);
+//         // loader.style.visibility = "hidden";
+//     }
+// }

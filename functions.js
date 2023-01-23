@@ -222,7 +222,7 @@ for (var c=0; c<c3.color.length; c++) {
     });
     // color_dict.sort(function(a,b) { return b.saliency - a.saliency});
 }
-// console.log(color_dict);
+// console.log(color_dict[0].lab[0]);
 
 // // Create Color Dictionary: LAB, Saliency, (Name)
 // var colorArray = [];

@@ -61,7 +61,8 @@ function scoreFuncts() {
         // Draw Sliders
         drawHeaders();
         drawLum();
-        drawSal();
+        // drawSal();
+        drawCol();
         drawPU();
         drawSmo();
         // Draw Profile Buttons
@@ -87,11 +88,19 @@ function drawHeaders() {
                 .style('font-size', 12)
                 .attr('fill', '#DADADA');
 
-    // Name Salience Heading
+    // // Name Salience Heading
+    // svg_functMenu.append('text')
+    //             .attr('x', 10)
+    //             .attr('y', 90)
+    //             .text('Name Salience')
+    //             .style('font-size', 12)
+    //             .attr('fill', '#DADADA');
+
+    // Color Change Heading
     svg_functMenu.append('text')
                 .attr('x', 10)
                 .attr('y', 90)
-                .text('Name Salience')
+                .text('Color Change')
                 .style('font-size', 12)
                 .attr('fill', '#DADADA');
 
@@ -163,7 +172,8 @@ function drawLum() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                // myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
                                     // drawLinegraph(e.data[0]);
@@ -185,16 +195,81 @@ function drawLum() {
                 .text('0-100');
 }
 
-// Name Salience Slider
-function drawSal() {
-    var dataSal = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
-    var sliderSal = d3.sliderBottom()
-                        .min(d3.min(dataSal))
-                        .max(d3.max(dataSal))
+// // Name Salience Slider
+// function drawSal() {
+//     var dataSal = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+//     var sliderSal = d3.sliderBottom()
+//                         .min(d3.min(dataSal))
+//                         .max(d3.max(dataSal))
+//                         .width(300)
+//                         .tickFormat(d3.format('.2d'))
+//                         .ticks(0)
+//                         .default(0)
+//                         .displayValue(false)
+//                         .fill('#761137')
+//                         .handle(
+//                             d3.symbol()
+//                             .type(d3.symbolCircle)
+//                             .size(100)()
+//                         )
+//                         // Onchange Value
+//                         .on('onchange', valSal => {
+//                             svg_functMenu.selectAll('text.sliderSalText').remove();
+//                             valSal_L = valSal * 100;
+//                             valSal_D = valSal * 40;
+//                             // Text Value
+//                             svg_functMenu.append('text')
+//                                         .attr('class','sliderSalText')
+//                                         .attr('x', 285)
+//                                         .attr('y', 90)
+//                                         .style('font-size', 12)
+//                                         .style('fill', '#DADADA')
+//                                         .text(d3.format('.2f')(valSal));
+
+//                             // Call Web Worker (Algorithm)
+//                             if(countCol > 0) {
+//                                 // // Loader icon
+//                                 // var loader = document.getElementById('loader');
+//                                 // loader.style.visibility = "visible";
+
+//                                 // Terminate old Worker and run new Worker
+//                                 myWorker.terminate();
+//                                 myWorker = new Worker('worker.js');
+//                                 // Post Message in Worker
+//                                 myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+//                                 myWorker.onmessage = function(e) {
+//                                     drawColormap(e.data[0]);
+//                                     // drawLinegraph(e.data[0]);
+//                                     // drawScatter(e.data[1]);
+//                                     drawPlot(e.data[0]);
+//                                     // loader.style.visibility = "hidden";
+//                                 }
+//                             }
+
+//                         });
+
+//     // Call Slider
+//     svg_functMenu.append('g').attr('transform', 'translate(15,105)').call(sliderSal);
+//     // Initial Text Value
+//     svg_functMenu.append('text')
+//                 .attr('class','sliderSalText')
+//                 .attr('x', 285)
+//                 .attr('y', 90)
+//                 .style('font-size', 12)
+//                 .style('fill', '#DADADA')
+//                 .text('0.00');
+// }
+
+// Color Change Slider
+function drawCol() {
+    var dataCol = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+    var sliderCol = d3.sliderBottom()
+                        .min(d3.min(dataCol))
+                        .max(d3.max(dataCol))
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(0)
+                        .default(0.5)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -203,18 +278,18 @@ function drawSal() {
                             .size(100)()
                         )
                         // Onchange Value
-                        .on('onchange', valSal => {
-                            svg_functMenu.selectAll('text.sliderSalText').remove();
-                            valSal_L = valSal * 100;
-                            valSal_D = valSal * 40;
+                        .on('onchange', valCol => {
+                            svg_functMenu.selectAll('text.sliderColText').remove();
+                            colChange = valCol * 100;
+                            // valCol_D = valSal * 40;
                             // Text Value
                             svg_functMenu.append('text')
-                                        .attr('class','sliderSalText')
+                                        .attr('class','sliderColText')
                                         .attr('x', 285)
                                         .attr('y', 90)
                                         .style('font-size', 12)
                                         .style('fill', '#DADADA')
-                                        .text(d3.format('.2f')(valSal));
+                                        .text(d3.format('.2f')(valCol));
 
                             // Call Web Worker (Algorithm)
                             if(countCol > 0) {
@@ -226,11 +301,12 @@ function drawSal() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                // myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
-                                    // drawLinegraph(e.data[0]);
-                                    // drawScatter(e.data[1]);
+                                    drawLinegraph(e.data[0]);
+                                    drawScatter(e.data[1]);
                                     drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
                                 }
@@ -239,15 +315,15 @@ function drawSal() {
                         });
 
     // Call Slider
-    svg_functMenu.append('g').attr('transform', 'translate(15,105)').call(sliderSal);
+    svg_functMenu.append('g').attr('transform', 'translate(15,105)').call(sliderCol);
     // Initial Text Value
     svg_functMenu.append('text')
-                .attr('class','sliderSalText')
+                .attr('class','sliderColText')
                 .attr('x', 285)
                 .attr('y', 90)
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
-                .text('0.00');
+                .text('0.50');
 }
 
 // Perceptual Uniformity Slider
@@ -270,8 +346,8 @@ function drawPU() {
                         // Onchange Value
                         .on('onchange', valPU => {
                             svg_functMenu.selectAll('text.sliderPUText').remove();
-                            valPU_L = valPU * -150;
-                            valPU_D = valPU * -100;
+                            valPU_L = valPU * -300;
+                            valPU_D = valPU * -200;
                             // Text Value
                             svg_functMenu.append('text')
                                         .attr('class','sliderPUText')
@@ -291,11 +367,12 @@ function drawPU() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                // myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
-                                    // drawLinegraph(e.data[0]);
-                                    // drawScatter(e.data[1]);
+                                    drawLinegraph(e.data[0]);
+                                    drawScatter(e.data[1]);
                                     drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
                                 }
@@ -312,7 +389,7 @@ function drawPU() {
                 .attr('y', 30)
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
-                .text('0.5');
+                .text('0.50');
 }
 
 // Smoothness Slider
@@ -324,7 +401,7 @@ function drawSmo() {
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(1)
+                        .default(0.5)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -335,8 +412,8 @@ function drawSmo() {
                         // Onchange Value
                         .on('onchange', valSmo => {
                             svg_functMenu.selectAll('text.sliderSmoText').remove();
-                            valSmo_L = valSmo * 100;
-                            valSmo_D = valSmo * 100;
+                            valSmo_L = valSmo * 200;
+                            valSmo_D = valSmo * 200;
                             // Text Value
                             svg_functMenu.append('text')
                                         .attr('class','sliderSmoText')
@@ -356,11 +433,12 @@ function drawSmo() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                // myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
-                                    // drawLinegraph(e.data[0]);
-                                    // drawScatter(e.data[1]);
+                                    drawLinegraph(e.data[0]);
+                                    drawScatter(e.data[1]);
                                     drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
                                 }
@@ -377,7 +455,7 @@ function drawSmo() {
                 .attr('y', 90)
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
-                .text('1.00');
+                .text('0.50');
 }
 
 // Luminance Profile Images
