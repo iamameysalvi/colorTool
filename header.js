@@ -65,6 +65,7 @@ function scoreFuncts() {
         drawCol();
         drawPU();
         drawSmo();
+        drawKey();
         // Draw Profile Buttons
         selectOption();
     }
@@ -104,6 +105,19 @@ function drawHeaders() {
                 .style('font-size', 12)
                 .attr('fill', '#DADADA');
 
+    svg_functMenu.append('text')
+                .attr('x', 230)
+                .attr('y', 120)
+                .text('Less Tolerance')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+    svg_functMenu.append('text')
+                .attr('x', 10)
+                .attr('y', 120)
+                .text('High Tolerance')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+
     // Perceptual Uniformity Heading
     svg_functMenu.append('text')
                 .attr('x', 400)
@@ -126,6 +140,14 @@ function drawHeaders() {
                 .attr('y', 30)
                 .text('Luminance Profile')
                 .style('font-size', 16)
+                .attr('fill', '#DADADA');
+
+    // Key Points Heading
+    svg_functMenu.append('text')
+                .attr('x', 1150)
+                .attr('y', 90)
+                .text('Key Points')
+                .style('font-size', 12)
                 .attr('fill', '#DADADA');
 }
 
@@ -176,8 +198,8 @@ function drawLum() {
                                 myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
-                                    // drawLinegraph(e.data[0]);
-                                    // drawScatter(e.data[1]);
+                                    drawLinegraph(e.data[0]);
+                                    drawScatter(e.data[1]);
                                     drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
                                 }
@@ -456,6 +478,87 @@ function drawSmo() {
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
                 .text('0.50');
+}
+
+// Key Points Slider
+function drawKey() {
+    var dataKey = [5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25];
+    var sliderKey = d3.sliderBottom()
+                        .min(d3.min(dataKey))
+                        .max(d3.max(dataKey))
+                        .width(300)
+                        .tickFormat(d3.format('.2d'))
+                        .ticks(0)
+                        .step(2)
+                        .default(17)
+                        .displayValue(false)
+                        .fill('#761137')
+                        .handle(
+                            d3.symbol()
+                            .type(d3.symbolCircle)
+                            .size(100)()
+                        )
+                        // Onchange Value
+                        .on('onchange', valKey => {
+                            svg_functMenu.selectAll('text.sliderKeyText').remove();
+                            paletteLen = valKey;
+                            // Text Value
+                            svg_functMenu.append('text')
+                                        .attr('class','sliderKeyText')
+                                        .attr('x', 1425)
+                                        .attr('y', 90)
+                                        .style('font-size', 12)
+                                        .style('fill', '#DADADA')
+                                        .text(d3.format('.2d')(valKey));
+
+                            // Call Web Worker (Algorithm)
+                            if(countCol > 0) {
+                                // // Loader icon
+                                // var loader = document.getElementById('loader');
+                                // loader.style.visibility = "visible";
+
+                                // Remove existing color icons from canvas
+                                svg_colormap.selectAll('rect.contCol').remove();
+                                svg_colormap.selectAll('rect.dropCol').remove();
+
+                                // Generate random colors (k=paletteLen from slider)
+                                datasetDrop = [];
+                                var lum_min = 0;
+                                var lum_max = 100;
+                                for(var k=0; k<(paletteLen); k++) {
+                                    var samp_lum = k/(paletteLen-1);
+                                    var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
+                        
+                                    genRandom(lum_exp, k);
+                                }
+
+                                // Terminate old Worker and run new Worker
+                                myWorker.terminate();
+                                myWorker = new Worker('worker.js');
+                                // Post Message in Worker
+                                // myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+                                myWorker.onmessage = function(e) {
+                                    drawColormap(e.data[0]);
+                                    drawLinegraph(e.data[0]);
+                                    drawScatter(e.data[1]);
+                                    drawPlot(e.data[0]);
+                                    // loader.style.visibility = "hidden";
+                                }
+                            }
+
+                        });
+
+    // Call Slider
+    svg_functMenu.append('g').attr('transform', 'translate(1150,105)').call(sliderKey);
+    // Initial Text Value
+    svg_functMenu.append('text')
+                .attr('class','sliderKeyText')
+                .attr('x', 1425)
+                .attr('y', 90)
+                .style('font-size', 12)
+                .style('fill', '#DADADA')
+                .text('17');
 }
 
 // Luminance Profile Images

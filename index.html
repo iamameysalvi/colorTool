@@ -68,7 +68,8 @@
                 <div id='colormap'></div>
                 <div class='colorSel' id='colorSel'></div>
                 <!-- Canvas & Features -->
-                <canvas id='canvasMain' width='860' height='65' style='border: solid 1px gray;'></canvas><br>
+                <canvas id='canvasMain' width='1100' height='65' style='border: solid 1px gray;'></canvas><br>
+                <!-- <canvas id="sugg2" width="300" height="30" style="border: solid 1px gray;"></canvas><br> -->
                 <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
                 <!-- Linegraph -->
                 <div class='lineMenu' id='lineMenu'>
@@ -163,7 +164,7 @@
             var svg_helpgraph = d3.select('div#helpGraph')
                                 .append('svg')
                                 .attr('preserveAspectRatio', 'xMinYMin meet')
-                                .attr('viewBox', '0 0 1000 1050')
+                                .attr('viewBox', '0 0 1000 350')
                                 //   .style('background', 'goldenrod')
                                 .classed('svg-content', true);
             // Help All Graph
@@ -202,7 +203,7 @@
             drawSelected();
 
             // algorithm.js
-            var paletteLen = 7;
+            var paletteLen = 17;
             var valLum = [0,100];
             var selLum = 'Linear';
             var colChange = 50;
@@ -229,6 +230,7 @@
 
             // worker.js
             var myWorker = new Worker('worker.js');
+            // var myWorker1 = new Worker('worker.js');
             // function functWorker() {
             //     // Web Worker
             //     // // Loader icon

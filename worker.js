@@ -104,54 +104,55 @@ onmessage = function(e) {
                 return colorInterpolator(d)
             });
 
-            // Points between key points
-            if(i < (sample_sal - 1)) {
-                var d = 4;
-                // First
-                var firstkey1 = 1 + d * (i-1);
-                var firstkey2 = 1 + d * i;
-                var cie00_firstkey1 = c3.color[index(d3.color(colorArray[firstkey1]))];
-                var cie00_firstkey2 = c3.color[index(d3.color(colorArray[firstkey2]))];
-                var perc_firstkey = cie00Distance(cie00_firstkey2, cie00_firstkey1);
-                var cie00_firstkey = cie00_firstkey + perc_firstkey;
-                // Mean PU Keys
-                var meancie00_firstkey = cie00_firstkey/sample_sal;
+            // // Points between key points
+            // if(i < (sample_sal - 1)) {
+            //     var d = 4;
+            //     // First
+            //     var firstkey1 = 1 + d * (i-1);
+            //     var firstkey2 = 1 + d * i;
+            //     var cie00_firstkey1 = c3.color[index(d3.color(colorArray[firstkey1]))];
+            //     var cie00_firstkey2 = c3.color[index(d3.color(colorArray[firstkey2]))];
+            //     var perc_firstkey = cie00Distance(cie00_firstkey2, cie00_firstkey1);
+            //     var cie00_firstkey = cie00_firstkey + perc_firstkey;
+            //     // Mean PU Keys
+            //     var meancie00_firstkey = cie00_firstkey/sample_sal;
 
-                // Second
-                var seckey1 = 2 + d * (i-1);
-                var seckey2 = 2 + d * i;
-                var cie00_seckey1 = c3.color[index(d3.color(colorArray[seckey1]))];
-                var cie00_seckey2 = c3.color[index(d3.color(colorArray[seckey2]))];
-                var perc_seckey = cie00Distance(cie00_seckey2, cie00_seckey1);
-                var cie00_seckey = cie00_seckey + perc_seckey;
-                // Mean PU Keys
-                var meancie00_seckey = cie00_seckey/sample_sal;
+            //     // Second
+            //     var seckey1 = 2 + d * (i-1);
+            //     var seckey2 = 2 + d * i;
+            //     var cie00_seckey1 = c3.color[index(d3.color(colorArray[seckey1]))];
+            //     var cie00_seckey2 = c3.color[index(d3.color(colorArray[seckey2]))];
+            //     var perc_seckey = cie00Distance(cie00_seckey2, cie00_seckey1);
+            //     var cie00_seckey = cie00_seckey + perc_seckey;
+            //     // Mean PU Keys
+            //     var meancie00_seckey = cie00_seckey/sample_sal;
 
-                // Third
-                var thirdkey1 = 1 + d * (i-1);
-                var thirdkey2 = 1 + d * i;
-                var cie00_thirdkey1 = c3.color[index(d3.color(colorArray[thirdkey1]))];
-                var cie00_thirdkey2 = c3.color[index(d3.color(colorArray[thirdkey2]))];
-                var perc_thirdkey = cie00Distance(cie00_thirdkey2, cie00_thirdkey1);
-                var cie00_thirdkey = cie00_thirdkey + perc_thirdkey;
+            //     // Third
+            //     var thirdkey1 = 1 + d * (i-1);
+            //     var thirdkey2 = 1 + d * i;
+            //     var cie00_thirdkey1 = c3.color[index(d3.color(colorArray[thirdkey1]))];
+            //     var cie00_thirdkey2 = c3.color[index(d3.color(colorArray[thirdkey2]))];
+            //     var perc_thirdkey = cie00Distance(cie00_thirdkey2, cie00_thirdkey1);
+            //     var cie00_thirdkey = cie00_thirdkey + perc_thirdkey;
 
-                // Mean PU Keys
-                var meancie00_thirdkey = cie00_thirdkey/sample_sal;
-            }
+            //     // Mean PU Keys
+            //     var meancie00_thirdkey = cie00_thirdkey/sample_sal;
+            // }
 
-            // Difference PU Keys
-            var perc_unifkey1 = Math.abs(meancie00_firstkey - perc_firstkey);
-            var perc_unifkey2 = Math.abs(meancie00_seckey - perc_seckey);
-            var perc_unifkey3 = Math.abs(meancie00_thirdkey - perc_thirdkey);
-            perc_fin = perc_fin + perc_unifkey1 + perc_unifkey2 + perc_unifkey3;
+            // // Difference PU Keys
+            // var perc_unifkey1 = Math.abs(meancie00_firstkey - perc_firstkey);
+            // var perc_unifkey2 = Math.abs(meancie00_seckey - perc_seckey);
+            // var perc_unifkey3 = Math.abs(meancie00_thirdkey - perc_thirdkey);
+            // perc_fin = perc_fin + perc_unifkey1 + perc_unifkey2 + perc_unifkey3;
 
             // Difference PU
             var perc_unif = Math.abs(meancie00Dist - perc_dist);
+            // console.log(perc_unif);
             // // Assign score if Nan
             // perc_unif = perc_unif || 100;
             perc_fin = perc_fin + perc_unif;
-            // Assign score if Nan
-            perc_fin = perc_fin || 100;
+            // // Assign score if Nan
+            // perc_fin = perc_fin || 500;
         }
 
         // Smoothness
@@ -193,6 +194,8 @@ onmessage = function(e) {
             angleDiff = angleDiff + angle;
         }
         var angleDifference = angleDiff/sample_sal;
+        // console.log("Perc Unif: ",perc_fin);
+        // console.log("Angle: ",angleDifference);
 
         // Weights
         if(selLum == 'Linear') {
@@ -212,7 +215,12 @@ onmessage = function(e) {
         }
 
         finScore = (wPU * perc_fin) + (wSmo * angleDifference) + (wPen * pen);
-        scoreArr.push([finScore, nSalience, perc_fin, angleDifference, palette]);
+        if(isNaN(finScore) || isNaN(nSalience) || isNaN(perc_fin) || isNaN(angleDifference)) {
+            console.log('NaN');
+        }
+        else {
+            scoreArr.push([finScore, nSalience, perc_fin, angleDifference, palette]);
+        }
 
         return finScore;
     }
@@ -626,6 +634,5 @@ onmessage = function(e) {
 
         return preferredObj;
     }
-
     postMessage([palette, highestToLowest]);
 }

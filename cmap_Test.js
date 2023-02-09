@@ -106,6 +106,34 @@ function drawColormap(data) {
     drawHistCan();
 }
 
+// Draw Main Colormap
+function drawSuggmap(data) {
+    // RAMP ARRAY
+    var color_samples = data.length;
+    var new_ramp = [];
+    
+    for (var i=0; i<color_samples; i++) {
+        var v = i/(color_samples-1);
+        new_ramp.push({
+            value: v,
+            rgb: data[i].RGB
+        });
+    }
+
+    colormap = new ColorMap(new_ramp);
+
+    var canvas = d3.select('#sugg2');
+    var w = +canvas.attr('width');
+    var h = +canvas.attr('height');
+
+    colormap.drawColorScale(
+        w, h,			// DIMENSIONS
+        w,				// NUMBER OF STEPS
+        'horizontal',	// DIRECTION 
+        canvas.node());
+    drawHistCan();
+}
+
 // Draw Helper Colormap
 function drawHelpermap(data) {
     // RAMP ARRAY
@@ -453,6 +481,9 @@ function drawColor(data, sel) {
                             var dropX = dropPos * (canWd/paletteLen);
                             var dropWd = Math.ceil(paletteLen * ptTest[0]/canWd) * (canWd/paletteLen) - dropX;
 
+                            // Draw the Dropped Color on Slider Canvas (before L* changes (show original color on canvas))
+                            drawDropCol(dropX, dropWd, rectDrop);
+
                             // Adjust color L* based on position
                             var lum_min = 0;
                             var lum_max = 100;
@@ -542,8 +573,8 @@ function drawColor(data, sel) {
                                 });
                             }
 
-                            // Draw the Dropped Color on Slider Canvas
-                            drawDropCol(dropX, dropWd, dropRect);
+                            // // Draw the Dropped Color on Slider Canvas (after L* changed (show updated color on canvas))
+                            // drawDropCol(dropX, dropWd, dropRect);
 
                             drawColor(data, sel);
                             svg_colormap.selectAll('text.sliderText').remove();
@@ -576,7 +607,8 @@ function drawDropCol(pos, wd, rectCol) {
                 .attr('y', 140)
                 .attr('width', wd)
                 .attr('height', 75)
-                .attr('fill', rectCol.fill)
+                // .attr('fill', rectCol.fill) // when dropRect is passed (after L* change)
+                .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
                 .attr('stroke', '#000');
 }
 
@@ -640,7 +672,18 @@ function initPos(pos, rectCol) {
     datasetDrop.splice(pos + 1, 1, rectCol);
     datasetDrop.splice(0, 1);
 
-    // Call Web Worker (Algorithm)
+    // // Call Web Worker (Algorithm)
+    // // Terminate old Worker and run new Worker
+    // myWorker1.terminate();
+    // myWorker1 = new Worker('worker.js');
+    // myWorker1.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+    // myWorker1.onmessage = function(e) {
+    //     drawSuggmap(e.data[0]);
+    //     // drawLinegraph(e.data[0]);
+    //     // drawScatter(e.data[1]);
+    //     // drawPlot(e.data[0]);
+    //     // loader.style.visibility = "hidden";
+    // }
 
     // Terminate old Worker and run new Worker
     myWorker.terminate();
