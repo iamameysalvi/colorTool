@@ -18,6 +18,7 @@ onmessage = function(e) {
     importScripts("header.js");
     importScripts("plots.js");
     importScripts("linegraph.js");
+    importScripts("kmeans.js");
 
     // Get Values from Worker
     palSize = e.data.args[0];
@@ -145,12 +146,17 @@ onmessage = function(e) {
             // var perc_unifkey3 = Math.abs(meancie00_thirdkey - perc_thirdkey);
             // perc_fin = perc_fin + perc_unifkey1 + perc_unifkey2 + perc_unifkey3;
 
-            // Difference PU
-            var perc_unif = Math.abs(meancie00Dist - perc_dist);
+            // // Difference PU
+            // var perc_unif = Math.abs(meancie00Dist - perc_dist);
+
+            // Standard Deviation
+            var perc_sd = Math.sqrt(((meancie00Dist - perc_dist)**2)/sample_sal);
+            perc_fin = perc_fin + perc_sd;
+
             // console.log(perc_unif);
             // // Assign score if Nan
             // perc_unif = perc_unif || 100;
-            perc_fin = perc_fin + perc_unif;
+            // perc_fin = perc_fin + perc_unif;
             // // Assign score if Nan
             // perc_fin = perc_fin || 500;
         }
@@ -197,6 +203,32 @@ onmessage = function(e) {
         // console.log("Perc Unif: ",perc_fin);
         // console.log("Angle: ",angleDifference);
 
+        // Luminance Difference
+        var lum_min = minl;
+        var lum_max = maxl;
+        var lum_fin = 0;
+
+        for(var i = 0; i < sample_sal; i++) {
+            var samp_lum = i/(sample_sal-1);
+            var lum_curr = palette[i].LAB[0];
+
+            if(selLum == 'Linear') {
+                var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
+            }
+            else if (selLum == 'Diverging') {
+                if(i < sample_sal/2) {
+                    var lum_exp = 5 * Math.round((Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum))/5);   // For Diverging Profile (Before Midpoint)
+                }
+                else {
+                    // var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2)))/5);   // For Diverging Profile (After Midpoint)
+                    var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (sample_sal-i-1)/(Math.floor(sample_sal/2)))/5);   // For Diverging Profile (After Midpoint)
+                }
+            }
+            var lum_diff = Math.abs(lum_exp - lum_curr);
+            lum_fin = lum_fin + lum_diff;
+        }
+        var lumDifference = lum_fin/sample_sal;
+
         // Weights
         if(selLum == 'Linear') {
             // Slider weights changes
@@ -214,7 +246,8 @@ onmessage = function(e) {
             var wPen = -10000;
         }
 
-        finScore = (wPU * perc_fin) + (wSmo * angleDifference) + (wPen * pen);
+        // finScore = (wPU * perc_fin) + (wSmo * angleDifference) + (wPen * pen);
+        finScore = (wPU * perc_fin) + (wSmo * angleDifference) + (wPen * pen) + (-100000 * lumDifference);
         if(isNaN(finScore) || isNaN(nSalience) || isNaN(perc_fin) || isNaN(angleDifference)) {
             console.log('NaN');
         }
@@ -240,7 +273,7 @@ onmessage = function(e) {
 
         // For sel: 1 (L -> no perturb, AB -> little to none perturb)
         var disturbAB_1 = 0; //5
-        var disturbL_1 = 0; //5
+        var disturbL_1 = 5; //5
 
         // random disturb one color
         var idx = getRandom(0, palette.length - 1);
@@ -433,8 +466,15 @@ onmessage = function(e) {
             var distColor = [];
             var selColors = [];
             
+            var randLum = sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_0, disturbL_0)/5));
+            while(randLum < 0 || randLum > 100) {
+                var randLum = sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_0, disturbL_0)/5));                
+            }
             // Disturb LAB space
-            new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_0, disturbL_0)/5)), sel_color.LAB[1] + getRandom(-disturbAB_0, disturbAB_0), sel_color.LAB[2] + getRandom(-disturbAB_0, disturbAB_0));
+            // console.log(randLum)
+            new_color = d3.lab(randLum, sel_color.LAB[1] + getRandom(-disturbAB_0, disturbAB_0), sel_color.LAB[2] + getRandom(-disturbAB_0, disturbAB_0));
+            // console.log(new_color)
+
             // Adjusted Color Displayability Test
             if(new_color.displayable() == true) {
                 rgb_checked = d3.rgb(new_color);
@@ -504,11 +544,20 @@ onmessage = function(e) {
             var distDisplay = 1000;
             var distColor = [];
             var selColors = [];
+            // console.log(sel_color)
 
+            var randLum = sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_1, disturbL_1)/5));
+            while(randLum < 0 || randLum > 100) {
+                var randLum = sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_0, disturbL_0)/5));                
+            }
             // Disturb LAB space
-            new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_0, disturbL_0)/5)), sel_color.LAB[1] + getRandom(-disturbAB_0, disturbAB_0), sel_color.LAB[2] + getRandom(-disturbAB_0, disturbAB_0));
+            // console.log(randLum)
+            new_color = d3.lab(randLum, sel_color.LAB[1] + getRandom(-disturbAB_0, disturbAB_0), sel_color.LAB[2] + getRandom(-disturbAB_0, disturbAB_0));
+            // console.log(new_color)
+
             // Adjusted Color Displayability Test
             if(new_color.displayable() == true) {
+                // console.log("T")
                 rgb_checked = d3.rgb(new_color);
                 new_fill = "rgb(" +
                     d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " +
@@ -534,6 +583,8 @@ onmessage = function(e) {
                 }
             }
             else {
+                // console.log("F")
+                // console.log(new_color.l)
                 for(i=0; i<color_dict.length; i++) {
                     if(new_color.l == color_dict[i].lab[0]) {
                         selColors.push(color_dict[i]);

@@ -349,20 +349,97 @@ function genRandom(lum, endPos) {
 // ADD COLOR ON CLICK
 function addColor(selection) {
     if(countCol < 16) {
-        datasetSel.push({
-            lab: selection.text(),
-            name: selection.attr('value'),
-            fill: selection.attr('style').slice(6,-51),
-            RGB: [d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).b],
-            LAB: [d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).l, d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).a, d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).b],
-            sel: 1
-        })
+        // Adjusted Color Displayability Test
+        var testDisplay =  d3.lab(
+            d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).l, 
+            d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).a, 
+            d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).b
+        );
+        var distDisplay = 1000;
+        var distColor = [];
+        var selColors = [];
+
+        if(testDisplay.displayable() == true) {
+            // console.log('true');
+            // Update the color
+            datasetSel.push({
+                name: selection.attr('value'),
+                fill: selection.attr('style').slice(6,-51),
+                RGB: [
+                    Math.round(d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).r), 
+                    Math.round(d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).g), 
+                    Math.round(d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).b)
+                ],
+                LAB: [
+                    d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).l, 
+                    d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).a, 
+                    d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).b
+                ],
+                sel: 1
+            });
+        }
+        else {
+            for(i=0; i<color_dict.length; i++) {
+                if(testDisplay.l == color_dict[i].lab[0]) {
+                    selColors.push(color_dict[i]);
+                    for(j=0; j<selColors.length; j++) {
+                        var localDist = Math.sqrt((selColors[j].lab[0] - testDisplay.l)**2 + (selColors[j].lab[1] - testDisplay.a)**2 + (selColors[j].lab[2] - testDisplay.b)**2);
+                        if(localDist < distDisplay) {
+                            distDisplay = localDist;
+                            distColor = selColors[j];
+                        }
+                    }
+                }
+            }
+            // Update the color
+            datasetSel.push({
+                name:  nameDistribution(d3.lab(
+                    d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                    d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                    d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+                )),
+                fill:  fill_color(
+                    d3.lab(
+                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                    )
+                ),
+                RGB: [
+                    Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                    Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                    Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                ],                
+                LAB: [
+                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                    d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                ],
+                sel: 1
+            });
+        }
         countCol++;
     }
     else {
         alert('Maximum Limit Reached!');
     }
     drawColor(datasetSel, selection);
+
+    // if(countCol < 16) {
+    //     datasetSel.push({
+    //         lab: selection.text(),
+    //         name: selection.attr('value'),
+    //         fill: selection.attr('style').slice(6,-51),
+    //         RGB: [d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).r, d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).g, d3.rgb(d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2])).b],
+    //         LAB: [d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).l, d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).a, d3.lab(selection.text().split(",").map(x=>+x)[0],selection.text().split(",").map(x=>+x)[1],selection.text().split(",").map(x=>+x)[2]).b],
+    //         sel: 1
+    //     })
+    //     countCol++;
+    // }
+    // else {
+    //     alert('Maximum Limit Reached!');
+    // }
+    // drawColor(datasetSel, selection);
 }
 
 // DRAW COLOR BOXES
@@ -484,94 +561,103 @@ function drawColor(data, sel) {
                             // Draw the Dropped Color on Slider Canvas (before L* changes (show original color on canvas))
                             drawDropCol(dropX, dropWd, rectDrop);
 
-                            // Adjust color L* based on position
-                            var lum_min = 0;
-                            var lum_max = 100;
-                            var samp_lum = dropPos/(paletteLen-1);
-                            if(selLum == 'Linear') {
-                                var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
-                            }
-                            else if (selLum == 'Diverging') {
-                                if(dropPos < paletteLen/2) {
-                                    var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * 2 * samp_lum)/5);   // For Diverging Profile (Before Midpoint)
-                                    // console.log('before ',lum_exp);
-                                }
-                                else {
-                                    var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (paletteLen-dropPos-1)/(Math.floor(paletteLen/2)))/5);   // For Diverging Profile (After Midpoint)
-                                    // console.log('after ',lum_exp);
-                                }
-                            }
+                            // // Adjust color L* based on position
+                            // var lum_min = 0;
+                            // var lum_max = 100;
+                            // var samp_lum = dropPos/(paletteLen-1);
+                            // if(selLum == 'Linear') {
+                            //     var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
+                            // }
+                            // else if (selLum == 'Diverging') {
+                            //     if(dropPos < paletteLen/2) {
+                            //         var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * 2 * samp_lum)/5);   // For Diverging Profile (Before Midpoint)
+                            //         // console.log('before ',lum_exp);
+                            //     }
+                            //     else {
+                            //         var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (paletteLen-dropPos-1)/(Math.floor(paletteLen/2)))/5);   // For Diverging Profile (After Midpoint)
+                            //         // console.log('after ',lum_exp);
+                            //     }
+                            // }
 
-                            // Adjusted Color Displayability Test
-                            var testDisplay =  d3.lab(
-                                d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).l, 
-                                d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, 
-                                d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b
-                            );
-                            var distDisplay = 1000;
-                            var distColor = [];
-                            var selColors = [];
+                            // // Adjusted Color Displayability Test
+                            // var testDisplay =  d3.lab(
+                            //     d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).l, 
+                            //     d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, 
+                            //     d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b
+                            // );
+                            // var distDisplay = 1000;
+                            // var distColor = [];
+                            // var selColors = [];
 
-                            if(testDisplay.displayable() == true) {
+                            // if(testDisplay.displayable() == true) {
                                 // Update the color
                                 var dropRect = ({
                                     pos: dropPos,
-                                    lab: rectDrop.data()[0].lab,
                                     name: rectDrop.data()[0].name,
                                     fill: rectDrop.data()[0].fill,
                                     RGB: [
-                                        Math.round(d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r), 
-                                        Math.round(d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g), 
-                                        Math.round(d3.rgb(d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b)
-                                    ],                
-                                    LAB: [
-                                        d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).l, 
-                                        d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, 
-                                        d3.lab(lum_exp,rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b
+                                        Math.round(d3.rgb(d3.lab(rectDrop.data()[0].LAB[0],rectDrop.data()[0].LAB[1],rectDrop.data()[0].LAB[2])).r), 
+                                        Math.round(d3.rgb(d3.lab(rectDrop.data()[0].LAB[0],rectDrop.data()[0].LAB[1],rectDrop.data()[0].LAB[2])).g), 
+                                        Math.round(d3.rgb(d3.lab(rectDrop.data()[0].LAB[0],rectDrop.data()[0].LAB[1],rectDrop.data()[0].LAB[2])).b)
                                     ],
+                                    LAB: [
+                                        rectDrop.data()[0].LAB[0],
+                                        rectDrop.data()[0].LAB[1],
+                                        rectDrop.data()[0].LAB[2]
+                                    ],
+                                    // RGB: [
+                                    //     Math.round(d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).r), 
+                                    //     Math.round(d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).g), 
+                                    //     Math.round(d3.rgb(d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2])).b)
+                                    // ],
+                                    // LAB: [
+                                    //     d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).l, 
+                                    //     d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).a, 
+                                    //     d3.lab(rectDrop.data()[0].lab.split(",").map(x=>+x)[0],rectDrop.data()[0].lab.split(",").map(x=>+x)[1],rectDrop.data()[0].lab.split(",").map(x=>+x)[2]).b
+                                    // ],
                                     sel: 1
                                 });
-                            }
-                            else {
-                                for(i=0; i<color_dict.length; i++) {
-                                    if(testDisplay.l == color_dict[i].lab[0]) {
-                                        // console.log(selColors);
-                                        selColors.push(color_dict[i]);
-                                        for(j=0; j<selColors.length; j++) {
-                                            var localDist = Math.sqrt((selColors[j].lab[0] - testDisplay.l)**2 + (selColors[j].lab[1] - testDisplay.a)**2 + (selColors[j].lab[2] - testDisplay.b)**2);
-                                            if(localDist < distDisplay) {
-                                                distDisplay = localDist;
-                                                distColor = selColors[j];
-                                            }
-                                        }
-                                    }
-                                }
-                                // for(i=0; i<color_dict.length; i++) {
-                                //     var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
-                                //     if(localDist < distDisplay) {
-                                //         distDisplay = localDist;
-                                //         distColor = color_dict[i];
-                                //     }
-                                // }
-                                // Update the color
-                                var dropRect = ({
-                                    pos: dropPos,
-                                    lab: distColor.lab,
-                                    name: distColor.name,
-                                    fill: distColor.fill,
-                                    RGB: [
-                                        Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r), 
-                                        Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
-                                        Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
-                                    ],                
-                                    LAB: [
-                                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-                                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-                                        d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-                                    ],
-                                    sel: 1
-                                });
-                            }
+                            // }
+                            // else {
+                            //     for(i=0; i<color_dict.length; i++) {
+                            //         if(testDisplay.l == color_dict[i].lab[0]) {
+                            //             // console.log(selColors);
+                            //             selColors.push(color_dict[i]);
+                            //             for(j=0; j<selColors.length; j++) {
+                            //                 var localDist = Math.sqrt((selColors[j].lab[0] - testDisplay.l)**2 + (selColors[j].lab[1] - testDisplay.a)**2 + (selColors[j].lab[2] - testDisplay.b)**2);
+                            //                 if(localDist < distDisplay) {
+                            //                     distDisplay = localDist;
+                            //                     distColor = selColors[j];
+                            //                 }
+                            //             }
+                            //         }
+                            //     }
+                            //     // for(i=0; i<color_dict.length; i++) {
+                            //     //     var localDist = Math.sqrt((color_dict[i].lab[0] - testDisplay.l)**2 + (color_dict[i].lab[1] - testDisplay.a)**2 + (color_dict[i].lab[2] - testDisplay.b)**2);
+                            //     //     if(localDist < distDisplay) {
+                            //     //         distDisplay = localDist;
+                            //     //         distColor = color_dict[i];
+                            //     //     }
+                            //     // }
+                            //     // Update the color
+                            //     var dropRect = ({
+                            //         pos: dropPos,
+                            //         lab: distColor.lab,
+                            //         name: distColor.name,
+                            //         fill: distColor.fill,
+                            //         RGB: [
+                            //             Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r), 
+                            //             Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                            //             Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                            //         ],                
+                            //         LAB: [
+                            //             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                            //             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                            //             d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                            //         ],
+                            //         sel: 1
+                            //     });
+                            // }
 
                             // // Draw the Dropped Color on Slider Canvas (after L* changed (show updated color on canvas))
                             // drawDropCol(dropX, dropWd, dropRect);
@@ -609,6 +695,21 @@ function drawDropCol(pos, wd, rectCol) {
                 .attr('height', 75)
                 // .attr('fill', rectCol.fill) // when dropRect is passed (after L* change)
                 .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
+                .attr('stroke', '#000');
+}
+
+// DRAW COLOR BOXES FROM PLOT CHANGES (LOCAL)
+function drawLocalCol(pos, wd, rectCol) {
+    // countDrop++;
+    // Draw Added Colors
+    svg_colormap.append('rect')
+                .attr('class', 'dropCol')
+                .attr('x', pos)
+                .attr('y', 140)
+                .attr('width', wd)
+                .attr('height', 75)
+                .attr('fill', rectCol.fill) // when dropRect is passed (after L* change)
+                // .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
                 .attr('stroke', '#000');
 }
 

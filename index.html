@@ -34,6 +34,7 @@
         <script src="cmap_Test.js"></script>
         <script src="plots.js"></script>
         <script src="linegraph.js"></script>
+        <script src="kmeans.js"></script>
     </head>
 
     <body class='no-select'>
@@ -70,7 +71,6 @@
                 <!-- Canvas & Features -->
                 <canvas id='canvasMain' width='1100' height='65' style='border: solid 1px gray;'></canvas><br>
                 <!-- <canvas id="sugg2" width="300" height="30" style="border: solid 1px gray;"></canvas><br> -->
-                <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
                 <!-- Linegraph -->
                 <div class='lineMenu' id='lineMenu'>
                     <input type='radio' name='lineButton' value='Luminance' class='lineButton' id='lineButton' checked onchange='lineChange()'>
@@ -89,15 +89,17 @@
                     <label for='satBut' class='option satBut'>
                         <span>Saturation</span>
                     <div class='lineGraph' id='lineGraph'></div>
+                    <h2><u>TESTING</u></h2>
+                    <!-- LAB Plots -->
+                    <div class='LABplots' id='LABplots'></div>
                     <div class='mapSuggest'>
-                        <h2><u>TESTING</u></h2>
+                        <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
                         <div id='mapSuggest'>
+                            <button class="clusterButton" onclick="kmeans(dataCluster, 4, useNaiveSharding = true)">Cluster</button>
                             <div class='helpGraph' id='helpGraph'></div>
                         </div>
                     </div>
                 </div>
-                <!-- LAB Plots -->
-                <div class='LABplots' id='LABplots'></div>
             </div>
         </div>
 
@@ -156,7 +158,7 @@
             var svg_LABplots = d3.select('div#LABplots')
                                 .append('svg')
                                 .attr('preserveAspectRatio', 'xMinYMin meet')
-                                .attr('viewBox', '0 0 1000 1050')
+                                .attr('viewBox', '0 0 1000 350')
                                 // .style('background', 'palegoldenrod')
                                 .classed('svg-content', true);
 
@@ -228,6 +230,9 @@
 
             var penColors = 0;
 
+            // plots.js
+            var dataCluster = [];
+            
             // worker.js
             var myWorker = new Worker('worker.js');
             // var myWorker1 = new Worker('worker.js');
