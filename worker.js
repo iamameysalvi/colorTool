@@ -160,6 +160,7 @@ onmessage = function(e) {
             // // Assign score if Nan
             // perc_fin = perc_fin || 500;
         }
+        var percUniformity = perc_fin/sample_sal;
 
         // Smoothness
         var ptsSmo = [];                    
@@ -252,7 +253,8 @@ onmessage = function(e) {
             console.log('NaN');
         }
         else {
-            scoreArr.push([finScore, nSalience, perc_fin, angleDifference, palette]);
+            // scoreArr.push([finScore, nSalience, perc_fin, angleDifference, palette]);
+            scoreArr.push([finScore, nSalience, percUniformity, angleDifference, palette]);
         }
 
         return finScore;
