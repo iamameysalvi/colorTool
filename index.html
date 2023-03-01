@@ -89,17 +89,27 @@
                     <label for='satBut' class='option satBut'>
                         <span>Saturation</span>
                     <div class='lineGraph' id='lineGraph'></div>
-                    <h2><u>TESTING</u></h2>
+                    <h2><u>LOCAL EDITS</u></h2>
                     <!-- LAB Plots -->
                     <div class='LABplots' id='LABplots'></div>
-                    <div class='mapSuggest'>
+                    <!-- <div class='mapSuggest'>
                         <canvas id="sugg1" width="500" height="50" style="border: solid 1px gray;"></canvas><br>
                         <div id='mapSuggest'>
                             <button class="clusterButton" onclick="kmeans(dataCluster, 4, useNaiveSharding = true)">Cluster</button>
                             <div class='helpGraph' id='helpGraph'></div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
+            </div>
+        </div>
+        <div id='grid-debug' class='grid-debug'>
+            <h2><u>PLOTS</u></h2>
+            <canvas id='canvasDebug' width='800' height='50' style='border: solid 1px gray;'></canvas><br>
+            <div id='grid-debugTop' class='grid-debugTop'>
+                <!-- Plots -->
+                <div class='scatterPlot' id='scatterPlot'></div>
+                <div class='histPlot1' id='histPlot1'></div>
+                <div class='histPlot2' id='histPlot2'></div>
             </div>
         </div>
 
@@ -162,20 +172,29 @@
                                 // .style('background', 'palegoldenrod')
                                 .classed('svg-content', true);
 
-            // Help Graph
-            var svg_helpgraph = d3.select('div#helpGraph')
-                                .append('svg')
-                                .attr('preserveAspectRatio', 'xMinYMin meet')
-                                .attr('viewBox', '0 0 1000 350')
-                                //   .style('background', 'goldenrod')
-                                .classed('svg-content', true);
-            // Help All Graph
-            var svg_helpAllgraph = d3.select('div#helpAllGraph')
-                                .append('svg')
-                                .attr('preserveAspectRatio', 'xMinYMin meet')
-                                .attr('viewBox', '0 0 1000 1050')
-                                //   .style('background', 'plum')
-                                .classed('svg-content', true);
+            // Debug
+            var svg_scatterPlot = d3.select('div#scatterPlot')
+                                    .append('svg')
+                                    .attr('preserveAspectRatio', 'xMinYMin meet')
+                                    .attr('viewBox', '0 0 600 500')
+                                    // .style('background', 'palegoldenrod')
+                                    .classed('svg-content', true);
+
+            // Histogram Plot
+            var svg_histPlot1 = d3.select('div#histPlot1')
+                                    .append('svg')
+                                    .attr('preserveAspectRatio', 'xMinYMin meet')
+                                    .attr('viewBox', '0 0 600 765')
+                                    // .style('background', 'plum')
+                                    .classed('svg-content', true);
+
+            // Histogram Plot
+            var svg_histPlot2 = d3.select('div#histPlot2')
+                                    .append('svg')
+                                    .attr('preserveAspectRatio', 'xMinYMin meet')
+                                    .attr('viewBox', '0 0 600 765')
+                                    // .style('background', 'salmon')
+                                    .classed('svg-content', true);
 //.................................................................................................................................................................................................................//
             // CALL FUNCTIONS
             // header.js
@@ -218,6 +237,8 @@
             }
             drawAxes();
 
+            var debugArr = [];
+
             // Linear Weights
             var valSal_L = 0;
             var valPU_L = -150;
@@ -225,8 +246,8 @@
 
             // Diverging Weights
             var valSal_D = 0;
-            var valPU_D = -100;
-            var valSmo_D = 100;
+            var valPU_D = -150;
+            var valSmo_D = 500;
 
             var penColors = 0;
 

@@ -291,7 +291,7 @@ function drawCol() {
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(0.5)
+                        .default(0.2)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -345,7 +345,7 @@ function drawCol() {
                 .attr('y', 90)
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
-                .text('0.50');
+                .text('0.20');
 }
 
 // Perceptual Uniformity Slider
@@ -523,8 +523,10 @@ function drawKey() {
 
                                 // Generate random colors (k=paletteLen from slider)
                                 datasetDrop = [];
-                                var lum_min = 0;
-                                var lum_max = 100;
+                                // var lum_min = 0;
+                                // var lum_max = 100;
+                                var lum_min = valLum[0];
+                                var lum_max = valLum[1];
                                 for(var k=0; k<(paletteLen); k++) {
                                     var samp_lum = k/(paletteLen-1);
                                     var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile

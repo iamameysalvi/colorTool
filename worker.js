@@ -35,6 +35,13 @@ onmessage = function(e) {
     colChange = e.data.args[11];
 
     var scoreArr = [];
+    var normUnif = [];
+    var normSmo = [];
+    var normLD = [];
+    var allUnif = [];
+    var allSmo = [];
+    var allLD = [];
+
     // Size of the Palette
     var palette_size = palSize;
     // Get Best Colormap
@@ -72,16 +79,6 @@ onmessage = function(e) {
         }
         var nSalience = name_sal/stepsCol;
 
-        // // Name Difference
-        // var name_dist = 0;
-        // for (var i = 1; i < sample_sal; i++) {
-        //     var name_dist2 = c3.color[index(d3.color(palette[i].fill))];
-        //     var name_dist1 = c3.color[index(d3.color(palette[i-1].fill))];
-
-        //     var namediff = nameDifference(name_dist2, name_dist1);
-        //     var name_dist = name_dist + namediff;
-        // }
-
         // Perceptual Uniformity
         var cie00_dist = 0;
         var cie00_firstkey = 0;
@@ -99,68 +96,16 @@ onmessage = function(e) {
             // Mean PU
             var meancie00Dist = cie00_dist/(sample_sal);
 
-            var colorInterpolator = d3.interpolateRgb(d3.rgb((palette[0].fill).slice(4,-1).split(",").map(x=>+x)[0], (palette[0].fill).slice(4,-1).split(",").map(x=>+x)[1], (palette[0].fill).slice(4,-1).split(",").map(x=>+x)[2]), d3.rgb((palette[sample_sal-1].fill).slice(4,-1).split(",").map(x=>+x)[0], (palette[sample_sal-1].fill).slice(4,-1).split(",").map(x=>+x)[1], (palette[sample_sal-1].fill).slice(4,-1).split(",").map(x=>+x)[2]));
-            var steps = 33;
-            var colorArray = d3.range(0, (1 + 1 / steps), 1 / (steps - 1)).map(function(d) {
-                return colorInterpolator(d)
-            });
-
-            // // Points between key points
-            // if(i < (sample_sal - 1)) {
-            //     var d = 4;
-            //     // First
-            //     var firstkey1 = 1 + d * (i-1);
-            //     var firstkey2 = 1 + d * i;
-            //     var cie00_firstkey1 = c3.color[index(d3.color(colorArray[firstkey1]))];
-            //     var cie00_firstkey2 = c3.color[index(d3.color(colorArray[firstkey2]))];
-            //     var perc_firstkey = cie00Distance(cie00_firstkey2, cie00_firstkey1);
-            //     var cie00_firstkey = cie00_firstkey + perc_firstkey;
-            //     // Mean PU Keys
-            //     var meancie00_firstkey = cie00_firstkey/sample_sal;
-
-            //     // Second
-            //     var seckey1 = 2 + d * (i-1);
-            //     var seckey2 = 2 + d * i;
-            //     var cie00_seckey1 = c3.color[index(d3.color(colorArray[seckey1]))];
-            //     var cie00_seckey2 = c3.color[index(d3.color(colorArray[seckey2]))];
-            //     var perc_seckey = cie00Distance(cie00_seckey2, cie00_seckey1);
-            //     var cie00_seckey = cie00_seckey + perc_seckey;
-            //     // Mean PU Keys
-            //     var meancie00_seckey = cie00_seckey/sample_sal;
-
-            //     // Third
-            //     var thirdkey1 = 1 + d * (i-1);
-            //     var thirdkey2 = 1 + d * i;
-            //     var cie00_thirdkey1 = c3.color[index(d3.color(colorArray[thirdkey1]))];
-            //     var cie00_thirdkey2 = c3.color[index(d3.color(colorArray[thirdkey2]))];
-            //     var perc_thirdkey = cie00Distance(cie00_thirdkey2, cie00_thirdkey1);
-            //     var cie00_thirdkey = cie00_thirdkey + perc_thirdkey;
-
-            //     // Mean PU Keys
-            //     var meancie00_thirdkey = cie00_thirdkey/sample_sal;
-            // }
-
-            // // Difference PU Keys
-            // var perc_unifkey1 = Math.abs(meancie00_firstkey - perc_firstkey);
-            // var perc_unifkey2 = Math.abs(meancie00_seckey - perc_seckey);
-            // var perc_unifkey3 = Math.abs(meancie00_thirdkey - perc_thirdkey);
-            // perc_fin = perc_fin + perc_unifkey1 + perc_unifkey2 + perc_unifkey3;
-
-            // // Difference PU
-            // var perc_unif = Math.abs(meancie00Dist - perc_dist);
-
             // Standard Deviation
             var perc_sd = Math.sqrt(((meancie00Dist - perc_dist)**2)/sample_sal);
             perc_fin = perc_fin + perc_sd;
-
-            // console.log(perc_unif);
-            // // Assign score if Nan
-            // perc_unif = perc_unif || 100;
-            // perc_fin = perc_fin + perc_unif;
-            // // Assign score if Nan
-            // perc_fin = perc_fin || 500;
         }
-        var percUniformity = perc_fin/sample_sal;
+        // // Normalization of Data
+        // // MIN: 0, MAX: 67.78429974221515 --> (50,-35,0) & (50,75,0) --> 110 (Calculator)
+        // // MIN: 0, MAX: 54.16850041966648 --> (50,0,-50) & (50,0,55) --> 105 (Calculator)
+        var minUnif = 0;
+        var maxUnif = 67.78429974221515;
+        var normUnif = (meancie00Dist - minUnif)/(maxUnif - minUnif);
 
         // Smoothness
         var ptsSmo = [];                    
@@ -190,7 +135,7 @@ onmessage = function(e) {
             var dot = x1*x2 + y1*y2 + z1*z2;
             var len1 = x1*x1 + y1*y1 + z1*z1;
             var len2 = x2*x2 + y2*y2 + z2*z2;
-            return Math.acos(dot/(Math.sqrt(len1) * Math.sqrt(len2)));
+            return Math.cos(dot/(Math.sqrt(len1) * Math.sqrt(len2))) * (Math.PI/180);
         }
         for(var i = 0; i < edgesSmoNew.length - 1; i++) {
             var vectorA = [edgesSmoNew[i].target[0] - edgesSmoNew[i].source[0], edgesSmoNew[i].target[1] - edgesSmoNew[i].source[1], edgesSmoNew[i].target[2] - edgesSmoNew[i].source[2]];
@@ -201,8 +146,6 @@ onmessage = function(e) {
             angleDiff = angleDiff + angle;
         }
         var angleDifference = angleDiff/sample_sal;
-        // console.log("Perc Unif: ",perc_fin);
-        // console.log("Angle: ",angleDifference);
 
         // Luminance Difference
         var lum_min = minl;
@@ -221,7 +164,6 @@ onmessage = function(e) {
                     var lum_exp = 5 * Math.round((Math.abs(lum_min + (lum_max-lum_min) * 2 * samp_lum))/5);   // For Diverging Profile (Before Midpoint)
                 }
                 else {
-                    // var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (paletteLen-k-1)/(Math.floor(paletteLen/2)))/5);   // For Diverging Profile (After Midpoint)
                     var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (sample_sal-i-1)/(Math.floor(sample_sal/2)))/5);   // For Diverging Profile (After Midpoint)
                 }
             }
@@ -230,6 +172,7 @@ onmessage = function(e) {
         }
         var lumDifference = lum_fin/sample_sal;
 
+
         // Weights
         if(selLum == 'Linear') {
             // Slider weights changes
@@ -237,6 +180,7 @@ onmessage = function(e) {
             var wPU = valPU_L;
             var wSmo = valSmo_L;
             var wPen = -10000;
+            var wLD = -100000;
         }
         // Diverging
         else if (selLum == 'Diverging') {
@@ -244,17 +188,16 @@ onmessage = function(e) {
             var wSal = valSal_D;
             var wPU = valPU_D;
             var wSmo = valSmo_D;
-            var wPen = -10000;
+            var wPen = -10000000;
+            var wLD = -100000000;
         }
 
-        // finScore = (wPU * perc_fin) + (wSmo * angleDifference) + (wPen * pen);
-        finScore = (wPU * perc_fin) + (wSmo * angleDifference) + (wPen * pen) + (-100000 * lumDifference);
-        if(isNaN(finScore) || isNaN(nSalience) || isNaN(perc_fin) || isNaN(angleDifference)) {
-            console.log('NaN');
+        finScore = (wPU * perc_fin) + (wSmo * angleDifference) + (wPen * pen) + (wLD * lumDifference);
+        if(isNaN(finScore) || isNaN(nSalience) || isNaN(perc_fin) || isNaN(angleDifference) || isNaN(lumDifference)) {
         }
         else {
             // scoreArr.push([finScore, nSalience, perc_fin, angleDifference, palette]);
-            scoreArr.push([finScore, nSalience, percUniformity, angleDifference, palette]);
+            scoreArr.push([finScore, nSalience, normUnif, angleDifference, palette]);
         }
 
         return finScore;
@@ -280,186 +223,6 @@ onmessage = function(e) {
         // random disturb one color
         var idx = getRandom(0, palette.length - 1);
         var sel_color = palette[idx];
-
-        // // For sel:0
-        // if(sel_color.sel == 0) {
-        //     // console.log('here')
-        //     var distDisplay = 1000;
-        //     var distColor = [];
-        //     var selColors = [];
-            
-        //     // Disturb LAB space
-        //     new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_0, disturbL_0)/5)), sel_color.LAB[1] + getRandom(-disturbAB_0, disturbAB_0), sel_color.LAB[2] + getRandom(-disturbAB_0, disturbAB_0));
-        //     // Adjusted Color Displayability Test
-        //     if(new_color.displayable() == true) {
-        //         rgb_checked = d3.rgb(new_color);
-        //         new_fill = "rgb(" +
-        //             d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " +
-        //             d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).g + ", " +
-        //             d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).b +
-        //         ")";
-        //         // Check distance from original selection
-        //         var cie00_sel = c3.color[index(d3.color(sel_val))];
-        //         var cie00_new = c3.color[index(d3.color(new_fill))];
-        //         var user_dist = nameDifference(cie00_sel, cie00_new);
-        //         if(user_dist < 0.75) {
-        //             // console.log(new_color);
-        //             // Update the color
-        //             palette[idx] = {
-        //                 RGB: [Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)],
-        //                 LAB: [new_color.l, new_color.a, new_color.b],
-        //                 name: nameDistribution(d3.lab(new_color.l, new_color.a, new_color.b)),
-        //                 fill: "rgb(" + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).g + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).b + ")",
-        //                 sel: 0
-        //             }
-        //         }
-        //     }
-        //     else {
-        //         for(i=0; i<color_dict.length; i++) {
-        //             if(new_color.l == color_dict[i].lab[0]) {
-        //                 selColors.push(color_dict[i]);
-        //                 for(j=0; j<selColors.length; j++) {
-        //                     var localDist = Math.sqrt((selColors[j].lab[0] - new_color.l)**2 + (selColors[j].lab[1] - new_color.a)**2 + (selColors[j].lab[2] - new_color.b)**2);
-        //                     if(localDist < distDisplay) {
-        //                         distDisplay = localDist;
-        //                         distColor = selColors[j];
-        //                     }
-        //                 }
-        //             }
-        //         // If L* perturbation is to be changed: use following code + else statement (breakme)
-        //         // *************************************************************************************
-        //         // breakme: if(new_color.l >= 0 && new_color.l <= 100) {
-        //         //     for(i=0; i<color_dict.length; i++) {
-        //         //         if(new_color.l == color_dict[i].lab[0]) {
-        //         //             selColors.push(color_dict[i]);
-        //         //             for(j=0; j<selColors.length; j++) {
-        //         //                 var localDist = Math.sqrt((selColors[j].lab[0] - new_color.l)**2 + (selColors[j].lab[1] - new_color.a)**2 + (selColors[j].lab[2] - new_color.b)**2);
-        //         //                 if(localDist < distDisplay) {
-        //         //                     distDisplay = localDist;
-        //         //                     distColor = selColors[j];
-        //         //                 }
-        //         //             }
-        //         //         }
-        //         //         // else if(new_color.l > 100) {
-        //         //         //     new_color.l = 100;
-        //         //         //     if(new_color.l == color_dict[i].lab[0]) {
-        //         //         //         selColors.push(color_dict[i]);
-        //         //         //         for(j=0; j<selColors.length; j++) {
-        //         //         //             var localDist = Math.sqrt((selColors[j].lab[0] - new_color.l)**2 + (selColors[j].lab[1] - new_color.a)**2 + (selColors[j].lab[2] - new_color.b)**2);
-        //         //         //             if(localDist < distDisplay) {
-        //         //         //                 distDisplay = localDist;
-        //         //         //                 distColor = selColors[j];
-        //         //         //             }
-        //         //         //         }
-        //         //         //     }
-        //         //         // }
-        //         //         // else if(new_color.l < 0) {
-        //         //         //     new_color.l = 0;
-        //         //         //     if(new_color.l == color_dict[i].lab[0]) {
-        //         //         //         selColors.push(color_dict[i]);
-        //         //         //         for(j=0; j<selColors.length; j++) {
-        //         //         //             var localDist = Math.sqrt((selColors[j].lab[0] - new_color.l)**2 + (selColors[j].lab[1] - new_color.a)**2 + (selColors[j].lab[2] - new_color.b)**2);
-        //         //         //             if(localDist < distDisplay) {
-        //         //         //                 distDisplay = localDist;
-        //         //         //                 distColor = selColors[j];
-        //         //         //             }
-        //         //         //         }
-        //         //         //     }
-        //         //         // }
-        //         // *************************************************************************************
-        //         }
-        //         // console.log('final: ',distColor.lab)
-        //         // Update the color
-        //         palette[idx] = ({
-        //             lab: distColor.lab,
-        //             name: distColor.name,
-        //             fill: distColor.fill,
-        //             RGB: [
-        //                 Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r), 
-        //                 Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
-        //                 Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
-        //             ],                
-        //             LAB: [
-        //                 d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-        //                 d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-        //                 d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-        //             ],
-        //             sel: 0
-        //         });
-        //         // *************************************************************************************
-        //         // else {
-        //         //     // console.log('break')
-        //         //     break breakme;
-        //         // }
-        //         // *************************************************************************************
-        //     }
-        // }
-        // // For sel:1
-        // else if(sel_color.sel == 1) {
-        //     // console.log('there')
-        //     var distDisplay = 1000;
-        //     var distColor = [];
-        //     var selColors = [];
-
-        //     // Disturb LAB space
-        //     new_color = d3.lab(sel_color.LAB[0] + (5 * Math.round(getRandom(-disturbL_1, disturbL_1)/5)), sel_color.LAB[1] + getRandom(-disturbAB_1, disturbAB_1), sel_color.LAB[2] + getRandom(-disturbAB_1, disturbAB_1));
-        //     // Adjusted Color Displayability Test
-        //     if(new_color.displayable() == true) {
-        //         rgb_checked = d3.rgb(new_color);
-        //         new_fill = "rgb(" +
-        //             d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " +
-        //             d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).g + ", " +
-        //             d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).b +
-        //         ")";
-        //         // Check distance from original selection
-        //         var cie00_sel = c3.color[index(d3.color(sel_val))];
-        //         var cie00_new = c3.color[index(d3.color(new_fill))];
-        //         var user_dist = nameDifference(cie00_sel, cie00_new);
-        //         if(user_dist < 0.75) {
-        //             // console.log(new_color);
-        //             // Update the color
-        //             palette[idx] = {
-        //                 RGB: [Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)],
-        //                 LAB: [new_color.l, new_color.a, new_color.b],
-        //                 name: nameDistribution(d3.lab(new_color.l, new_color.a, new_color.b)),
-        //                 fill: "rgb(" + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).r + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).g + ", " + d3.rgb(Math.round(rgb_checked.r), Math.round(rgb_checked.g), Math.round(rgb_checked.b)).b + ")",
-        //                 sel: 1
-        //             }
-        //         }
-        //     }
-        //     else {
-        //         for(i=0; i<color_dict.length; i++) {
-        //             if(new_color.l == color_dict[i].lab[0]) {
-        //                 selColors.push(color_dict[i]);
-        //                 for(j=0; j<selColors.length; j++) {
-        //                     var localDist = Math.sqrt((selColors[j].lab[0] - new_color.l)**2 + (selColors[j].lab[1] - new_color.a)**2 + (selColors[j].lab[2] - new_color.b)**2);
-        //                     if(localDist < distDisplay) {
-        //                         distDisplay = localDist;
-        //                         distColor = selColors[j];
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //         // console.log('final: ',distColor.lab)
-        //         // Update the color
-        //         palette[idx] = ({
-        //             lab: distColor.lab,
-        //             name: distColor.name,
-        //             fill: distColor.fill,
-        //             RGB: [
-        //                 Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r), 
-        //                 Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
-        //                 Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
-        //             ],                
-        //             LAB: [
-        //                 d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
-        //                 d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
-        //                 d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
-        //             ],
-        //             sel: 0
-        //         });
-        //     }
-        //  }
 
         // For sel:0
         if(sel_color.sel == 0) {
@@ -667,25 +430,16 @@ onmessage = function(e) {
                     o = o2;
                     if (preferredObj.score - o.score < 0) {
                         preferredObj = o;
-                        // console.log(preferredObj);
-                        // datasetTop.push(preferredObj);
                     }
                 }
-                // if (iterate_times > max_iteration_times) {
-                //     break;
-                // }
             }
             cur_temper *= dec;
             if (iterate_times > max_iteration_times) {
                 break;
             }
         }
-        // // Top 3 Suggestion Colormaps
-        // drawSuggestmap(datasetTop.reverse()[1].id, "#sugg1");
-        // drawSuggestmap(datasetTop.reverse()[2].id, "#sugg2");
-        // drawSuggestmap(datasetTop.reverse()[3].id, "#sugg3");
 
         return preferredObj;
     }
-    postMessage([palette, highestToLowest]);
+    postMessage([palette, highestToLowest, scoreArr]);
 }

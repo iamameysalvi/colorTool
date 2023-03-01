@@ -150,7 +150,7 @@ function drawHelpermap(data) {
 
     colormap = new ColorMap(new_ramp);
 
-    var canvas = d3.select('#sugg1');
+    var canvas = d3.select('#canvasDebug');
     var w = +canvas.attr('width');
     var h = +canvas.attr('height');
 
@@ -718,8 +718,10 @@ function initPos(pos, rectCol) {
     dropArr.push(pos);
     // drawColormap(datasetDrop);
     // drawLinegraph(datasetDrop);
-    var lum_min = 0;
-    var lum_max = 100;
+    // var lum_min = 0;
+    // var lum_max = 100;
+    var lum_min = valLum[0];
+    var lum_max = valLum[1];
 
     // Linear
     if(selLum == 'Linear') {
@@ -795,8 +797,11 @@ function initPos(pos, rectCol) {
     myWorker.onmessage = function(e) {
         drawColormap(e.data[0]);
         drawLinegraph(e.data[0]);
-        drawScatter(e.data[1]);
+        // drawScatter(e.data[1]);
         drawPlot(e.data[0]);
+        scatter(e.data[2]);
+        hist1(e.data[2]);
+        hist2(e.data[2]);
         // loader.style.visibility = "hidden";
     }
 }
