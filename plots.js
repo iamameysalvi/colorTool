@@ -21,17 +21,6 @@ function drawPlot(plotData) {
                         .attr('y2', plotData[i+1].LAB[2] + 153)
                         .raise();
         }
-        // // Colornames
-        // for(i = 0; i < plotData.length ; i++) {
-        //     svg_LABplots.append('text')
-        //                 .attr('class', 'textGraphAB')
-        //                 .attr('index', function() { return i; })
-        //                 .attr('x', plotData[i].LAB[1] + 165)
-        //                 .attr('y', plotData[i].LAB[2] + 153)
-        //                 .text(plotData[i].name)
-        //                 .style('font-size', '15px')
-        //                 .raise();
-        // }
         // Circles
         for(i = 0; i < plotData.length; i++) {
             svg_LABplots.append('circle')
@@ -65,28 +54,12 @@ function drawPlot(plotData) {
                             circDrop.style('stroke-width', 5);
                             var circY = 0;
                             var circX = 0;
-                            // // Search Function
-                            // svg_LABplots.append('rect')
-                            //             .attr('class', 'plotSearch')
-                            //             .attr('x', circDrop.attr('cx'))
-                            //             .attr('y', circDrop.attr('cy'))
-                            //             .attr('width', 150)
-                            //             .attr('height', 35)
-                            //             .style('fill', 'cyan');
-
-                            // Draw CIELAB Space Image
-                            // svg_LABplots.append("image")
-                            //             .attr('class', 'labImage')
-                            //             .attr('x', 25)
-                            //             .attr('y', 25)
-                            //             .attr('width', 256)
-                            //             .attr('height', 256)
-                            //             .attr("xlink:href", "download.png")
-                            //             .attr('opacity', 0.3);
 
                             // Move Rectangle
                             d3.select(document).on('mousemove', function() {
                                 svg_LABplots.selectAll('text.textGraphAB').remove();
+                                svg_LABplots.selectAll('line.plotGraph').remove();
+
                                 circDrop.style('stroke-width', 5);
 
                                 // Get Mouse Co-Ordinates
@@ -129,15 +102,66 @@ function drawPlot(plotData) {
                                 var newA = circX - 153;
                                 var newB = circY - 153;
 
-                                var colL = ({
-                                    pos: circDrop.attr('index'),
-                                    lab: oldL + "," + newA + "," + newB,
-                                    fill: "rgb" + "(" + d3.rgb(d3.lab(oldL,newA,newB)).r + "," + d3.rgb(d3.lab(oldL,newA,newB)).g + "," + d3.rgb(d3.lab(oldL,newA,newB)).b + ")",
-                                    RGB: [d3.rgb(d3.lab(oldL,newA,newB)).r, d3.rgb(d3.lab(oldL,newA,newB)).g, d3.rgb(d3.lab(oldL,newA,newB)).b],
-                                    LAB: [oldL,newA, newB],
-                                    name:  nameDistribution(d3.lab(oldL,newA, newB)),
-                                    sel: 0
-                                });
+                                var distDisplay = 1000;
+                                var distColor = [];
+                                var selColors = [];
+
+                                // Adjusted Color Displayability Test
+                                var testDisplay =  d3.lab(
+                                    oldL, newA, newB
+                                );
+
+                                if(testDisplay.displayable() == true) {
+                                    var colL = ({
+                                        pos: circDrop.attr('index'),
+                                        fill: "rgb" + "(" + d3.rgb(d3.lab(oldL,newA,newB)).r + "," + d3.rgb(d3.lab(oldL,newA,newB)).g + "," + d3.rgb(d3.lab(oldL,newA,newB)).b + ")",
+                                        RGB: [d3.rgb(d3.lab(oldL,newA,newB)).r, d3.rgb(d3.lab(oldL,newA,newB)).g, d3.rgb(d3.lab(oldL,newA,newB)).b],
+                                        LAB: [oldL,newA,newB],
+                                        name:  nameDistribution(d3.lab(oldL,newA,newB)),
+                                        sel: 0
+                                    });                                    
+                                }
+                                else {
+                                    for(i=0; i<color_dict.length; i++) {
+                                        if(oldL == color_dict[i].lab[0]) {
+                                            selColors.push(color_dict[i]);
+                                            for(j=0; j<selColors.length; j++) {
+                                                var localDist = Math.sqrt((selColors[j].lab[0] - oldL)**2 + (selColors[j].lab[1] - newA)**2 + (selColors[j].lab[2] - newB)**2);
+                                                if(localDist < distDisplay) {
+                                                    distDisplay = localDist;
+                                                    distColor = selColors[j];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Update the color
+                                    var colL = ({
+                                        name:  nameDistribution(d3.lab(
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+                                        )),
+                                        fill:  fill_color(
+                                            d3.lab(
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                            )
+                                        ),
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                                        ],                
+                                        LAB: [
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                        ],
+                                        sel: 0
+                                    });
+                                }
                                 plotData.splice(circDrop.attr('index'), 1, colL);
 
                                 // Draw Slice
@@ -183,7 +207,68 @@ function drawPlot(plotData) {
                                                 .raise();
                                 }
 
+                                // Update Lines
+                                for(i = 0; i < plotData.length - 1; i++) {
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .attr('index', function() { return i; })
+                                                .style('stroke', "#000")
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[1] + 153)
+                                                .attr('y1', plotData[i].LAB[2] + 153)
+                                                .attr('x2', plotData[i+1].LAB[1] + 153)
+                                                .attr('y2', plotData[i+1].LAB[2] + 153)
+                                                .raise();
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .style('stroke', '#000')
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[1] + 428)
+                                                .attr('y1', -plotData[i].LAB[0]*2.56 + 281)
+                                                .attr('x2', plotData[i+1].LAB[1] + 428)
+                                                .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
+                                                .raise();
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .style('stroke', '#000')
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[2] + 703)
+                                                .attr('y1', -plotData[i].LAB[0]*2.56 + 281)
+                                                .attr('x2', plotData[i+1].LAB[2] + 703)
+                                                .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
+                                                .raise();
+                                }
 
+                                // // Update Circles
+                                // for(i = 0; i < plotData.length; i++) {
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[1] + 153)
+                                //                 .attr('cy', plotData[i].LAB[2] + 153)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1);
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[1] + 428)
+                                //                 .attr('cy', -plotData[i].LAB[0]*2.56 + 281)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1);
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[2] + 703)
+                                //                 .attr('cy', -plotData[i].LAB[0]*2.56 + 281)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1)
+                                // }
 
                                 drawColormap(plotData);
                                 drawLinegraph(plotData);
@@ -205,16 +290,75 @@ function drawPlot(plotData) {
                                 var newA = circX - 153;
                                 var newB = circY - 153;
 
-                                // Update Color L*
-                                var colL = ({
-                                    pos: circDrop.attr('index'),
-                                    lab: oldL + "," + newA + "," + newB,
-                                    fill: "rgb" + "(" + d3.rgb(d3.lab(oldL,newA,newB)).r + "," + d3.rgb(d3.lab(oldL,newA,newB)).g + "," + d3.rgb(d3.lab(oldL,newA,newB)).b + ")",
-                                    RGB: [d3.rgb(d3.lab(oldL,newA,newB)).r, d3.rgb(d3.lab(oldL,newA,newB)).g, d3.rgb(d3.lab(oldL,newA,newB)).b],
-                                    LAB: [oldL,newA, newB],
-                                    name: nameDistribution(d3.lab(oldL,newA, newB)),
-                                    sel: 1
-                                });
+                                var distDisplay = 1000;
+                                var distColor = [];
+                                var selColors = [];
+
+                                // Adjusted Color Displayability Test
+                                var testDisplay =  d3.lab(
+                                    oldL, newA, newB
+                                );
+
+                                if(testDisplay.displayable() == true) {
+                                    var colL = ({
+                                        pos: circDrop.attr('index'),
+                                        fill: "rgb" + 
+                                        "(" + 
+                                            Math.round(d3.rgb(d3.lab(oldL,newA,newB)).r) + "," + 
+                                            Math.round(d3.rgb(d3.lab(oldL,newA,newB)).g) + "," + 
+                                            Math.round(d3.rgb(d3.lab(oldL,newA,newB)).b) + 
+                                        ")",
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(oldL,newA,newB)).r), 
+                                            Math.round(d3.rgb(d3.lab(oldL,newA,newB)).g), 
+                                            Math.round(d3.rgb(d3.lab(oldL,newA,newB)).b)
+                                        ],
+                                        LAB: [oldL,newA,newB],
+                                        name:  nameDistribution(d3.lab(oldL,newA,newB)),
+                                        sel: 0
+                                    });                                    
+                                }
+                                else {
+                                    for(i=0; i<color_dict.length; i++) {
+                                        if(oldL == color_dict[i].lab[0]) {
+                                            selColors.push(color_dict[i]);
+                                            for(j=0; j<selColors.length; j++) {
+                                                var localDist = Math.sqrt((selColors[j].lab[0] - oldL)**2 + (selColors[j].lab[1] - newA)**2 + (selColors[j].lab[2] - newB)**2);
+                                                if(localDist < distDisplay) {
+                                                    distDisplay = localDist;
+                                                    distColor = selColors[j];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Update the color
+                                    var colL = ({
+                                        name:  nameDistribution(d3.lab(
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+                                        )),
+                                        fill:  fill_color(
+                                            d3.lab(
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                            )
+                                        ),
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                                        ],                
+                                        LAB: [
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                        ],
+                                        sel: 1
+                                    });
+                                }
                                 plotData.splice(circDrop.attr('index'), 1, colL);
                                 
                                 // Draw Drop Color
@@ -223,10 +367,7 @@ function drawPlot(plotData) {
                                 var dropX = dropPos * (canWd/paletteLen);
                                 var dropWd = canWd/paletteLen;
 
-                                drawDropCol(dropX, dropWd, colL);
-
-                                // Call initPos Function
-                                initMultPos(circDrop.attr('index'), colL);
+                                drawLocalCol(dropX, dropWd, colL);
 
                                 drawColormap(plotData);
                                 drawLinegraph(plotData);
@@ -282,17 +423,6 @@ function drawPlot(plotData) {
                         .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
                         .raise();
         }
-        // // Colornames
-        // for(i = 0; i < plotData.length ; i++) {
-        //     svg_LABplots.append('text')
-        //                 .attr('class', 'textGraphLA')
-        //                 .attr('index', function() { return i; })
-        //                 .attr('x', plotData[i].LAB[1] + 440)
-        //                 .attr('y', -plotData[i].LAB[0]*2.56 + 275)
-        //                 .text(plotData[i].name)
-        //                 .style('font-size', '15px')
-        //                 .raise();
-        // }
         // Circles
         for(i = 0; i < plotData.length; i++) {
             svg_LABplots.append('circle')
@@ -331,6 +461,7 @@ function drawPlot(plotData) {
                             d3.select(document).on('mousemove', function() {
                                 circDrop.style('stroke-width', 5);
                                 svg_LABplots.selectAll('text.textGraphLA').remove();
+                                svg_LABplots.selectAll('line.plotGraph').remove();
                                 // Get Mouse Co-Ordinates
                                 var newMouse = d3.mouse(circDrop.node());
                                 // Mouse Pointer/ Edges Position
@@ -393,15 +524,67 @@ function drawPlot(plotData) {
                                 var newA = circX - 428;
                                 // var oldA = plotData[circDrop.attr('index')].LAB[1];
                                 var oldB = plotData[circDrop.attr('index')].LAB[2];
-                                var colL = ({
-                                    pos: circDrop.attr('index'),
-                                    lab: newL + "," + newA + "," + oldB,
-                                    fill: "rgb" + "(" + d3.rgb(d3.lab(newL,newA,oldB)).r + "," + d3.rgb(d3.lab(newL,newA,oldB)).g + "," + d3.rgb(d3.lab(newL,newA,oldB)).b + ")",
-                                    RGB: [d3.rgb(d3.lab(newL,newA,oldB)).r, d3.rgb(d3.lab(newL,newA,oldB)).g, d3.rgb(d3.lab(newL,newA,oldB)).b],
-                                    LAB: [newL,newA, oldB],
-                                    name:  nameDistribution(d3.lab(newL,newA, oldB)),
-                                    sel: 0
-                                });
+
+                                var distDisplay = 1000;
+                                var distColor = [];
+                                var selColors = [];
+
+                                // Adjusted Color Displayability Test
+                                var testDisplay =  d3.lab(
+                                    newL, newA, oldB
+                                );
+
+                                if(testDisplay.displayable() == true) {
+                                    var colL = ({
+                                        pos: circDrop.attr('index'),
+                                        fill: "rgb" + "(" + d3.rgb(d3.lab(newL,newA,oldB)).r + "," + d3.rgb(d3.lab(newL,newA,oldB)).g + "," + d3.rgb(d3.lab(newL,newA,oldB)).b + ")",
+                                        RGB: [d3.rgb(d3.lab(newL,newA,oldB)).r, d3.rgb(d3.lab(newL,newA,oldB)).g, d3.rgb(d3.lab(newL,newA,oldB)).b],
+                                        LAB: [newL,newA, oldB],
+                                        name:  nameDistribution(d3.lab(newL,newA, oldB)),
+                                        sel: 0
+                                    });                                    
+                                }
+                                else {
+                                    for(i=0; i<color_dict.length; i++) {
+                                        if(newL == color_dict[i].lab[0]) {
+                                            selColors.push(color_dict[i]);
+                                            for(j=0; j<selColors.length; j++) {
+                                                var localDist = Math.sqrt((selColors[j].lab[0] - newL)**2 + (selColors[j].lab[1] - newA)**2 + (selColors[j].lab[2] - oldB)**2);
+                                                if(localDist < distDisplay) {
+                                                    distDisplay = localDist;
+                                                    distColor = selColors[j];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Update the color
+                                    var colL = ({
+                                        name:  nameDistribution(d3.lab(
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+                                        )),
+                                        fill:  fill_color(
+                                            d3.lab(
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                            )
+                                        ),
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                                        ],                
+                                        LAB: [
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                        ],
+                                        sel: 0
+                                    });
+                                }
                                 plotData.splice(circDrop.attr('index'), 1, colL);
 
                                 // Update Colornames
@@ -426,15 +609,68 @@ function drawPlot(plotData) {
                                                 .raise();
                                 }
 
-                                // // Update Colornames
-                                // svg_LABplots.append('text')
-                                //             .attr('class', 'textGraphLA')
-                                //             .attr('index', function() { return i; })
-                                //             .attr('x', newA + 440)
-                                //             .attr('y', -newL*2.56 + 275)
-                                //             .text(colL.name)
-                                //             .style('font-size', '15px')
-                                //             .raise();
+                                // Update Lines
+                                for(i = 0; i < plotData.length - 1; i++) {
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .attr('index', function() { return i; })
+                                                .style('stroke', "#000")
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[1] + 153)
+                                                .attr('y1', plotData[i].LAB[2] + 153)
+                                                .attr('x2', plotData[i+1].LAB[1] + 153)
+                                                .attr('y2', plotData[i+1].LAB[2] + 153)
+                                                .raise();
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .style('stroke', '#000')
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[1] + 428)
+                                                .attr('y1', -plotData[i].LAB[0]*2.56 + 281)
+                                                .attr('x2', plotData[i+1].LAB[1] + 428)
+                                                .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
+                                                .raise();
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .style('stroke', '#000')
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[2] + 703)
+                                                .attr('y1', -plotData[i].LAB[0]*2.56 + 281)
+                                                .attr('x2', plotData[i+1].LAB[2] + 703)
+                                                .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
+                                                .raise();
+                                }
+
+                                // // Update Circles
+                                // for(i = 0; i < plotData.length; i++) {
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[1] + 153)
+                                //                 .attr('cy', plotData[i].LAB[2] + 153)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1);
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[1] + 428)
+                                //                 .attr('cy', -plotData[i].LAB[0]*2.56 + 281)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1);
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[2] + 703)
+                                //                 .attr('cy', -plotData[i].LAB[0]*2.56 + 281)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1)
+                                // }
 
                                 drawColormap(plotData);
                                 drawLinegraph(plotData);
@@ -452,20 +688,79 @@ function drawPlot(plotData) {
                                 
                                 // Formula for mapping to [0,100]
                                 var newL = 5 * Math.round((100 - (((circY - 25)/(256)) * 100))/5);
-                                var newA = circX - 428;
+                                var newA = Math.round(circX - 428);
                                 // var oldA = plotData[circDrop.attr('index')].LAB[1];
-                                var oldB = plotData[circDrop.attr('index')].LAB[2];
+                                var oldB = Math.round(plotData[circDrop.attr('index')].LAB[2]);
 
-                                // Update Color L*
-                                var colL = ({
-                                    pos: circDrop.attr('index'),
-                                    lab: newL + "," + newA + "," + oldB,
-                                    fill: "rgb" + "(" + d3.rgb(d3.lab(newL,newA,oldB)).r + "," + d3.rgb(d3.lab(newL,newA,oldB)).g + "," + d3.rgb(d3.lab(newL,newA,oldB)).b + ")",
-                                    RGB: [d3.rgb(d3.lab(newL,newA,oldB)).r, d3.rgb(d3.lab(newL,newA,oldB)).g, d3.rgb(d3.lab(newL,newA,oldB)).b],
-                                    LAB: [newL,newA, oldB],
-                                    name:  nameDistribution(d3.lab(newL,newA, oldB)),
-                                    sel: 1
-                                });
+                                var distDisplay = 1000;
+                                var distColor = [];
+                                var selColors = [];
+
+                                // Adjusted Color Displayability Test
+                                var testDisplay =  d3.lab(
+                                    newL, newA, oldB
+                                );
+
+                                if(testDisplay.displayable() == true) {
+                                    var colL = ({
+                                        pos: circDrop.attr('index'),
+                                        fill: "rgb" + 
+                                        "(" + 
+                                            Math.round(d3.rgb(d3.lab(newL,newA,oldB)).r) + "," + 
+                                            Math.round(d3.rgb(d3.lab(newL,newA,oldB)).g) + "," + 
+                                            Math.round(d3.rgb(d3.lab(newL,newA,oldB)).b) + 
+                                        ")",
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(newL,newA,oldB)).r), 
+                                            Math.round(d3.rgb(d3.lab(newL,newA,oldB)).g), 
+                                            Math.round(d3.rgb(d3.lab(newL,newA,oldB)).b)
+                                        ],
+                                        LAB: [newL,newA, oldB],
+                                        name:  nameDistribution(d3.lab(newL,newA, oldB)),
+                                        sel: 0
+                                    });                                    
+                                }
+                                else {
+                                    for(i=0; i<color_dict.length; i++) {
+                                        if(newL == color_dict[i].lab[0]) {
+                                            selColors.push(color_dict[i]);
+                                            for(j=0; j<selColors.length; j++) {
+                                                var localDist = Math.sqrt((selColors[j].lab[0] - newL)**2 + (selColors[j].lab[1] - newA)**2 + (selColors[j].lab[2] - oldB)**2);
+                                                if(localDist < distDisplay) {
+                                                    distDisplay = localDist;
+                                                    distColor = selColors[j];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Update the color
+                                    var colL = ({
+                                        name:  nameDistribution(d3.lab(
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+                                        )),
+                                        fill:  fill_color(
+                                            d3.lab(
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                            )
+                                        ),
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                                        ],                
+                                        LAB: [
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                        ],
+                                        sel: 1
+                                    });
+                                }
                                 plotData.splice(circDrop.attr('index'), 1, colL);
 
                                 // Draw Drop Color
@@ -474,10 +769,8 @@ function drawPlot(plotData) {
                                 var dropX = dropPos * (canWd/paletteLen);
                                 var dropWd = canWd/paletteLen;
 
-                                drawDropCol(dropX, dropWd, colL);
 
-                                // Call initPos Function
-                                initMultPos(circDrop.attr('index'), colL);
+                                drawLocalCol(dropX, dropWd, colL);
 
                                 drawColormap(plotData);
                                 drawLinegraph(plotData);
@@ -532,17 +825,6 @@ function drawPlot(plotData) {
                         .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
                         .raise();
         }
-        // // Colornames
-        // for(i = 0; i < plotData.length ; i++) {
-        //     svg_LABplots.append('text')
-        //                 .attr('class', 'textGraphLB')
-        //                 .attr('index', function() { return i; })
-        //                 .attr('x', plotData[i].LAB[2] + 715)
-        //                 .attr('y', -plotData[i].LAB[0]*2.56 + 275)
-        //                 .text(plotData[i].name)
-        //                 .style('font-size', '15px')
-        //                 .raise();
-        // }
         // Circles
         for(i = 0; i < plotData.length; i++) {
             svg_LABplots.append('circle')
@@ -581,6 +863,7 @@ function drawPlot(plotData) {
                             d3.select(document).on('mousemove', function() {
                                 circDrop.style('stroke-width', 5);
                                 svg_LABplots.selectAll('text.textGraphLB').remove();
+                                svg_LABplots.selectAll('line.plotGraph').remove();
                                 // Get Mouse Co-Ordinates
                                 var newMouse = d3.mouse(circDrop.node());
                                 // Mouse Pointer/ Edges Position
@@ -643,15 +926,67 @@ function drawPlot(plotData) {
                                 var oldA = plotData[circDrop.attr('index')].LAB[1];
                                 var newB = circX - 703;
                                 // var oldB = plotData[circDrop.attr('index')].LAB[2];
-                                var colL = ({
-                                    pos: circDrop.attr('index'),
-                                    lab: newL + "," + oldA + "," + newB,
-                                    fill: "rgb" + "(" + d3.rgb(d3.lab(newL,oldA,newB)).r + "," + d3.rgb(d3.lab(newL,oldA,newB)).g + "," + d3.rgb(d3.lab(newL,oldA,newB)).b + ")",
-                                    RGB: [d3.rgb(d3.lab(newL,oldA,newB)).r, d3.rgb(d3.lab(newL,oldA,newB)).g, d3.rgb(d3.lab(newL,oldA,newB)).b],
-                                    LAB: [newL,oldA, newB],
-                                    name:  nameDistribution(d3.lab(newL,oldA, newB)),
-                                    sel: 0
-                                });
+
+                                var distDisplay = 1000;
+                                var distColor = [];
+                                var selColors = [];
+                                
+                                // Adjusted Color Displayability Test
+                                var testDisplay =  d3.lab(
+                                    newL, oldA, newB
+                                );
+
+                                if(testDisplay.displayable() == true) {
+                                    var colL = ({
+                                        pos: circDrop.attr('index'),
+                                        fill: "rgb" + "(" + d3.rgb(d3.lab(newL,oldA,newB)).r + "," + d3.rgb(d3.lab(newL,oldA,newB)).g + "," + d3.rgb(d3.lab(newL,oldA,newB)).b + ")",
+                                        RGB: [d3.rgb(d3.lab(newL,oldA,newB)).r, d3.rgb(d3.lab(newL,oldA,newB)).g, d3.rgb(d3.lab(newL,oldA,newB)).b],
+                                        LAB: [newL,oldA,newB],
+                                        name:  nameDistribution(d3.lab(newL,oldA,newB)),
+                                        sel: 0
+                                    });                                    
+                                }
+                                else {
+                                    for(i=0; i<color_dict.length; i++) {
+                                        if(newL == color_dict[i].lab[0]) {
+                                            selColors.push(color_dict[i]);
+                                            for(j=0; j<selColors.length; j++) {
+                                                var localDist = Math.sqrt((selColors[j].lab[0] - newL)**2 + (selColors[j].lab[1] - oldA)**2 + (selColors[j].lab[2] - newB)**2);
+                                                if(localDist < distDisplay) {
+                                                    distDisplay = localDist;
+                                                    distColor = selColors[j];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Update the color
+                                    var colL = ({
+                                        name:  nameDistribution(d3.lab(
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+                                        )),
+                                        fill:  fill_color(
+                                            d3.lab(
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                            )
+                                        ),
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                                        ],                
+                                        LAB: [
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                        ],
+                                        sel: 0
+                                    });
+                                }
                                 plotData.splice(circDrop.attr('index'), 1, colL);
 
                                 // Update Colornames
@@ -676,15 +1011,68 @@ function drawPlot(plotData) {
                                                 .raise();
                                 }
 
-                                // // Update Colornames
-                                // svg_LABplots.append('text')
-                                //             .attr('class', 'textGraphLB')
-                                //             .attr('index', function() { return i; })
-                                //             .attr('x', newB + 715)
-                                //             .attr('y', -newL*2.56 + 275)
-                                //             .text(colL.name)
-                                //             .style('font-size', '15px')
-                                //             .raise();
+                                // Update Lines
+                                for(i = 0; i < plotData.length - 1; i++) {
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .attr('index', function() { return i; })
+                                                .style('stroke', "#000")
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[1] + 153)
+                                                .attr('y1', plotData[i].LAB[2] + 153)
+                                                .attr('x2', plotData[i+1].LAB[1] + 153)
+                                                .attr('y2', plotData[i+1].LAB[2] + 153)
+                                                .raise();
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .style('stroke', '#000')
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[1] + 428)
+                                                .attr('y1', -plotData[i].LAB[0]*2.56 + 281)
+                                                .attr('x2', plotData[i+1].LAB[1] + 428)
+                                                .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
+                                                .raise();
+                                    svg_LABplots.append('line')
+                                                .attr('class', 'plotGraph')
+                                                .style('stroke', '#000')
+                                                .style('stroke-width', 1)
+                                                .attr('x1', plotData[i].LAB[2] + 703)
+                                                .attr('y1', -plotData[i].LAB[0]*2.56 + 281)
+                                                .attr('x2', plotData[i+1].LAB[2] + 703)
+                                                .attr('y2', -plotData[i+1].LAB[0]*2.56 + 281)
+                                                .raise();
+                                }
+
+                                // // Update Circles
+                                // for(i = 0; i < plotData.length; i++) {
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[1] + 153)
+                                //                 .attr('cy', plotData[i].LAB[2] + 153)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1);
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[1] + 428)
+                                //                 .attr('cy', -plotData[i].LAB[0]*2.56 + 281)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1);
+                                //     svg_LABplots.append('circle')
+                                //                 .attr('class', 'plotGraph')
+                                //                 .attr('index', function() { return i; })
+                                //                 .attr('cx', plotData[i].LAB[2] + 703)
+                                //                 .attr('cy', -plotData[i].LAB[0]*2.56 + 281)
+                                //                 .attr('r', 5)
+                                //                 .style('fill', plotData[i].fill)
+                                //                 .style('stroke', "black")
+                                //                 .style('stroke-width', 1)
+                                // }
 
                                 drawColormap(plotData);
                                 drawLinegraph(plotData);
@@ -706,16 +1094,75 @@ function drawPlot(plotData) {
                                 var newB = circX - 703;
                                 // var oldB = plotData[circDrop.attr('index')].LAB[2];
 
-                                // Update Color L*
-                                var colL = ({
-                                    pos: circDrop.attr('index'),
-                                    lab: newL + "," + oldA + "," + newB,
-                                    fill: "rgb" + "(" + d3.rgb(d3.lab(newL,oldA,newB)).r + "," + d3.rgb(d3.lab(newL,oldA,newB)).g + "," + d3.rgb(d3.lab(newL,oldA,newB)).b + ")",
-                                    RGB: [d3.rgb(d3.lab(newL,oldA,newB)).r, d3.rgb(d3.lab(newL,oldA,newB)).g, d3.rgb(d3.lab(newL,oldA,newB)).b],
-                                    LAB: [newL,oldA, newB],
-                                    name:  nameDistribution(d3.lab(newL,oldA, newB)),
-                                    sel: 1
-                                });
+                                var distDisplay = 1000;
+                                var distColor = [];
+                                var selColors = [];
+
+                                // Adjusted Color Displayability Test
+                                var testDisplay =  d3.lab(
+                                    newL, oldA, newB
+                                );
+
+                                if(testDisplay.displayable() == true) {
+                                    var colL = ({
+                                        pos: circDrop.attr('index'),
+                                        fill: "rgb" + 
+                                        "(" + 
+                                            Math.round(d3.rgb(d3.lab(newL,oldA,newB)).r) + "," + 
+                                            Math.round(d3.rgb(d3.lab(newL,oldA,newB)).g) + "," + 
+                                            Math.round(d3.rgb(d3.lab(newL,oldA,newB)).b) + 
+                                        ")",
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(newL,oldA,newB)).r), 
+                                            Math.round(d3.rgb(d3.lab(newL,oldA,newB)).g), 
+                                            Math.round(d3.rgb(d3.lab(newL,oldA,newB)).b)
+                                        ],
+                                        LAB: [newL,oldA, newB],
+                                        name:  nameDistribution(d3.lab(newL,oldA,newB)),
+                                        sel: 1
+                                    });                                    
+                                }
+                                else {
+                                    for(i=0; i<color_dict.length; i++) {
+                                        if(newL == color_dict[i].lab[0]) {
+                                            selColors.push(color_dict[i]);
+                                            for(j=0; j<selColors.length; j++) {
+                                                var localDist = Math.sqrt((selColors[j].lab[0] - newL)**2 + (selColors[j].lab[1] - oldA)**2 + (selColors[j].lab[2] - newB)**2);
+                                                if(localDist < distDisplay) {
+                                                    distDisplay = localDist;
+                                                    distColor = selColors[j];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Update the color
+                                    var colL = ({
+                                        name:  nameDistribution(d3.lab(
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).l,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).a,
+                                            d3.lab(distColor.lab[0], distColor.lab[1], distColor.lab[2]).b,
+                                        )),
+                                        fill:  fill_color(
+                                            d3.lab(
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                                d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                            )
+                                        ),
+                                        RGB: [
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).r),
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).g), 
+                                            Math.round(d3.rgb(d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2])).b)
+                                        ],                
+                                        LAB: [
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).l, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).a, 
+                                            d3.lab(distColor.lab[0],distColor.lab[1],distColor.lab[2]).b
+                                        ],
+                                        sel: 1
+                                    });
+                                }
                                 plotData.splice(circDrop.attr('index'), 1, colL);     
 
                                 // Draw Drop Color
@@ -724,20 +1171,7 @@ function drawPlot(plotData) {
                                 var dropX = dropPos * (canWd/paletteLen);
                                 var dropWd = canWd/paletteLen;
 
-                                drawDropCol(dropX, dropWd, colL);
-
-                                // Call initPos Function
-                                initMultPos(circDrop.attr('index'), colL);
-
-                                // // Post Message in Worker
-                                // myWorker.postMessage({ 'args': [paletteLen, val_lum[0], val_lum[1], plotData, lumRadio, val_salSimL, val_ldSimL, val_puSimL, val_lboSimL, val_smoSimL, val_salSimD, val_ldSimD, val_puSimD, val_lboSimD, val_smoSimD, colRadio] });
-                                // myWorker.onmessage = function(e) {
-                                //     drawColormap(e.data[0]);
-                                //     drawLinegraph(e.data[0]);
-                                //     // drawScatter(e.data[1]);
-                                //     drawPlot(e.data[0]);
-                                //     loader.style.visibility = "hidden";
-                                // }
+                                drawLocalCol(dropX, dropWd, colL);
 
                                 drawColormap(plotData);
                                 drawLinegraph(plotData);
@@ -810,304 +1244,282 @@ function drawComp() {
                 .text('Perc Unif')
 }
 
+function scatter(valArr) {
+    // CREATE SCATTERPLOT --> PU vs SMOOTHNESS
+    svg_scatterPlot.selectAll('circle.scatCirc').remove();
+    svg_scatterPlot.selectAll('text.scatText').remove();
+    svg_scatterPlot.selectAll('text.finText').remove();
 
-function drawScatter(scatData) {
-    svg_helpgraph.selectAll('circle.scatCirc').remove();
-    svg_helpgraph.selectAll('text.scatText').remove();
-    svg_helpgraph.selectAll('text.finText').remove();
-    svg_helpAllgraph.selectAll('circle.scatCirc').remove();
-    svg_helpAllgraph.selectAll('text.scatText').remove();
-    svg_helpAllgraph.selectAll('text.finText').remove();
-
-    var MinMaxSal = [];
-    var MinMaxLD = [];
     var MinMaxPU = [];
     var MinMaxSmo = [];
     var MinMaxVal = [];
-    var valScat = scatData.slice(0,500);
-    for(i = 0; i < valScat.length; i++) { 
-        MinMaxSal.push(valScat[i][1]);
-        MinMaxLD.push(valScat[i][2]);
-        MinMaxPU.push(valScat[i][3]);
-        MinMaxSmo.push(valScat[i][4]);
-        MinMaxVal.push(Math.abs(valScat[i][0]));
+
+    for(i = 0; i < valArr.length; i++) {
+        // Plotting of Scatterplot
+        if(isNaN(valArr[i][0]) || isNaN(valArr[i][1]) || isNaN(valArr[i][2]) || isNaN(valArr[i][3])) {
+            delete valArr[i];
+        }
+        else {
+            MinMaxVal.push(valArr[i][0]);
+            MinMaxPU.push(valArr[i][2]);
+            MinMaxSmo.push(valArr[i][3]);
+        }
     }
 
-    // LD v PU
+    // Smoothness v PU
     // Draw the X-Axis
     var x1 = d3.scaleLinear()
-            .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-            .range([0, 900]);
-    svg_helpgraph.append('g')
-            .attr('transform', 'translate(50,225)') 
+            .domain([Math.min(...MinMaxSmo), Math.max(...MinMaxSmo)])
+            .range([0, 500]);
+    svg_scatterPlot.append('g')
+            .attr('transform', 'translate(50,425)') 
             .call(d3.axisBottom(x1).tickValues([]));
-    svg_helpgraph.append('text')
+    svg_scatterPlot.append('text')
             .attr('class', 'scatText')
             .attr('text-anchor', 'end')
-            .attr('x', 500)
-            .attr('y', 250)
-            .text('Lum Difference')
+            .attr('x', 350)
+            .attr('y', 450)
+            .text('Smoothness')
 
     // Draw the Y-Axis
     var y1 = d3.scaleLinear()
             .domain([Math.min(...MinMaxPU), Math.max(...MinMaxPU)])        
-            .range([200, 0]);
+            .range([400, 0]);
 
     var col1 = d3.scaleSequential()
                 .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
-                .interpolator(d3.interpolateBlues);
+                .interpolator(d3.interpolateReds);
 
-    svg_helpgraph.append('g')
+    var rad1 = d3.scaleLinear()
+                .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
+                .range([2, 10]);
+
+    svg_scatterPlot.append('g')
             .attr('transform', 'translate(50,25)')   
             .call(d3.axisLeft(y1).tickValues([]));
-    svg_helpgraph.append('text')
+    svg_scatterPlot.append('text')
             .attr('class', 'scatText')
             .attr('text-anchor', 'end')
-            .attr('x', -75)
+            .attr('x', -185)
             .attr('y', 35)
             .attr('transform', 'rotate(-90)')
             .text('Perc Unif')
-    for(i = 0; i < valScat.length; i++) {
-        svg_helpgraph.append('circle')
+    for(i = 0; i < valArr.length; i++) {
+        svg_scatterPlot.append('circle')
                     .attr('class', 'scatCirc')
                     .attr('index', function() { return i; })
-                    .attr('cx', function(d) { return x1(valScat[i][2]) + 50; } )
-                    .attr('cy', function(d) { return y1(valScat[i][3]) + 25; } )
-                    .attr('r', 5)
+                    .attr('cx', function(d) { return x1(valArr[i][3]) + 50; } )
+                    .attr('cy', function(d) { return y1(valArr[i][2]) + 25; } )
+                    // .attr('r', 5)
+                    .attr('r', function(d) { return rad1(valArr[i][0]); })
                     .attr('stroke', '#A8A8A8')
-                    .attr('fill', function(d) { return col1(valScat[i][0])})
+                    .attr('fill', function(d) { return col1(valArr[i][0])})
                     .on('mouseover', function() {
-                        svg_helpgraph.selectAll('text.finText').remove();
+                        svg_scatterPlot.selectAll('text.finText').remove();
                         var idMap = d3.select(this).attr('index');
-                        drawHelpermap(valScat[idMap][5]);
-                        svg_helpgraph.append('text')
+                        drawHelpermap(valArr[idMap][4]);
+                        svg_scatterPlot.append('text')
                                     .attr('class', 'finText')
                                     .attr('text-anchor', 'end')
-                                    .attr('x', 400)
-                                    .attr('y', 20)
-                                    .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', P.Uniformity: ' + d3.format('.2f')(valScat[idMap][3]));
+                                    .attr('x', 500)
+                                    .attr('y', 475)
+                                    .text('Final: ' + d3.format('.2f')(valArr[idMap][0]) + ', P.Uniformity: ' + d3.format('.2f')(valArr[idMap][2]) + ', Smoothness: ' + d3.format('.2f')(valArr[idMap][3]));
                     })
-                    .append('title').text(function() { return valScat[i][0]; });
+                    .append('title').text(function() { return valArr[i][0]; });
+    }
+}
+
+function hist1(valArr) {
+    // CREATE HISTOGRAM --> PU
+    svg_histPlot1.selectAll('rect.hist1Rect').remove();
+    svg_histPlot1.selectAll('text.hist1Text').remove();
+    svg_histPlot1.selectAll('text.finh1Text').remove();
+    svg_histPlot1.selectAll('text.tickh1Text').remove();
+
+    var MinMaxPU = [];
+    var MinMaxSmo = [];
+    var MinMaxVal = [];
+
+    for(i = 0; i < valArr.length; i++) {
+        // Plotting of Scatterplot
+        if(isNaN(valArr[i][0]) || isNaN(valArr[i][1]) || isNaN(valArr[i][2]) || isNaN(valArr[i][3])) {
+            delete valArr[i];
+        }
+        else {
+            MinMaxVal.push(valArr[i][0]);
+            MinMaxPU.push(valArr[i][2]);
+            MinMaxSmo.push(valArr[i][3]);
+        }
     }
 
-
-    // LD v SMO
     // Draw the X-Axis
-    var x2 = d3.scaleLinear()
-            .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-            .range([0, 900]);
-    svg_helpgraph.append('g')
-            .attr('transform', 'translate(50,475)') 
-            .call(d3.axisBottom(x2).tickValues([]));
-    svg_helpgraph.append('text')
-            .attr('class', 'scatText')
-            .attr('text-anchor', 'end')
-            .attr('x', 500)
-            .attr('y', 500)
-            .text('Lum Difference')
+    var x_h1 = d3.scaleLinear()
+                    .domain([Math.min(...MinMaxPU), Math.max(...MinMaxPU)])
+                    .range([0, 500]);
+    svg_histPlot1.append('g')
+                .attr('transform', 'translate(50,650)') 
+                .call(d3.axisBottom(x_h1).tickValues([]));
+    svg_histPlot1.append('text')
+                .attr('class', 'hist1Text')
+                .attr('text-anchor', 'end')
+                .attr('x', 350)
+                .attr('y', 710)
+                .text('Perc Unif')
 
     // Draw the Y-Axis
-    var y2 = d3.scaleLinear()
-            .domain([Math.min(...MinMaxSmo), Math.max(...MinMaxSmo)])        
-            .range([200, 0]);
+    var y_h1 = d3.scaleLinear()
+                .domain([0, 500])    
+                .range([625, 0]);
+    svg_histPlot1.append('g')
+            .attr('transform', 'translate(50,37.5)')   
+            .call(d3.axisLeft(y_h1).tickValues([]));
+    svg_histPlot1.append('text')
+            .attr('class', 'hist1Text')
+            .attr('text-anchor', 'end')
+            .attr('x', -350)
+            .attr('y', 35)
+            .attr('transform', 'rotate(-90)')
+            .text('Count')
 
     var col2 = d3.scaleSequential()
-                .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
-                .interpolator(d3.interpolateReds);
+                .domain([Math.min(...MinMaxPU) * 2000, Math.max(...MinMaxPU)])  
+                .interpolator(d3.interpolateBlues);
 
-    svg_helpgraph.append('g')
-            .attr('transform', 'translate(50,275)')   
-            .call(d3.axisLeft(y2).tickValues([]));
-    svg_helpgraph.append('text')
-            .attr('class', 'scatText')
-            .attr('text-anchor', 'end')
-            .attr('x', -325)
-            .attr('y', 35)
-            .attr('transform', 'rotate(-90)')
-            .text('Smoothness')
-    for(i = 0; i < valScat.length; i++) {
-        svg_helpgraph.append('circle')
-                    .attr('class', 'scatCirc')
-                    .attr('index', function() { return i; })
-                    .attr('cx', function(d) { return x2(valScat[i][2]) + 50; } )
-                    .attr('cy', function(d) { return y2(valScat[i][4]) + 275; } )
-                    .attr('r', 5)
-                    .attr('stroke', '#A8A8A8')
-                    .attr('fill', function(d) { return col2(valScat[i][0])})
-                    .on('mouseover', function() {
-                        svg_helpgraph.selectAll('text.finText').remove();
-                        var idMap = d3.select(this).attr('index');
-                        drawHelpermap(valScat[idMap][5]);
-                        svg_helpgraph.append('text')
-                                    .attr('class', 'finText')
-                                    .attr('text-anchor', 'end')
-                                    .attr('x', 400)
-                                    .attr('y', 20)
-                                    .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Smoothness: ' + d3.format('.2f')(valScat[idMap][4]));
-                    })
-                    .append('title').text(function() { return valScat[i][0]; });
+    var hist1_count = {};
+    for(i = 0; i < valArr.length; i++) {
+        puVal = Math.round(valArr[i][2] * 100)/100;
+        hist1_count[puVal] = (hist1_count[puVal]||0) + 1;
     }
 
+    var lenPU = Object.keys(hist1_count).length
+    var minPU = (Object.keys(hist1_count))[0]
+    var maxPU = Object.keys(hist1_count)[lenPU - 1]
 
-    // LD v Sal
+    for(var j=0; j<lenPU; j++) {
+        svg_histPlot1.append('rect')
+                .attr('class', 'hist1Rect')
+                .attr('x', 50 + (j*(500/lenPU)))
+                .attr('y', 650 - Object.values(hist1_count)[j] * 3)
+                .attr('width', 500/lenPU)
+                .attr('height', Object.values(hist1_count)[j] * 3)
+                .attr('fill', function() { return col2(Object.values(hist1_count)[j]); })
+                .attr('stroke', 'black')
+                .attr('stroke-width', 0.15);
+        svg_histPlot1.append('text')
+                .attr('class', 'finh1Text')
+                .attr('x', 50 + (j*(500/lenPU)))
+                .attr('y', 650 - 10 - Object.values(hist1_count)[j] * 3)
+                .style('font-size', '10px')
+                .text(Object.values(hist1_count)[j]);
+        svg_histPlot1.append('text')
+                .attr('class', 'tickh1Text')
+                .attr('x', -687.5)
+                .attr('y', 60 + (j*(500/lenPU)))
+                .style('font-size', '10px')
+                .attr('transform', 'rotate(-90)')
+                .text(Object.keys(hist1_count)[j]);
+    }
+}
+
+function hist2(valArr) {
+    // CREATE HISTOGRAM --> SMOOTHNESS
+    svg_histPlot2.selectAll('rect.hist2Rect').remove();
+    svg_histPlot2.selectAll('text.hist2Text').remove();
+    svg_histPlot2.selectAll('text.finh2Text').remove();
+    svg_histPlot2.selectAll('text.tickh2Text').remove();
+
+    var MinMaxPU = [];
+    var MinMaxSmo = [];
+    var MinMaxVal = [];
+
+    for(i = 0; i < valArr.length; i++) {
+        // Plotting of Scatterplot
+        if(isNaN(valArr[i][0]) || isNaN(valArr[i][1]) || isNaN(valArr[i][2]) || isNaN(valArr[i][3])) {
+            delete valArr[i];
+        }
+        else {
+            MinMaxVal.push(valArr[i][0]);
+            MinMaxPU.push(valArr[i][2]);
+            MinMaxSmo.push(valArr[i][3]);
+        }
+    }
+
     // Draw the X-Axis
-    var x3 = d3.scaleLinear()
-            .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-            .range([0, 900]);
-    svg_helpgraph.append('g')
-            .attr('transform', 'translate(50,725)') 
-            .call(d3.axisBottom(x3).tickValues([]));
-    svg_helpgraph.append('text')
-            .attr('class', 'scatText')
-            .attr('text-anchor', 'end')
-            .attr('x', 500)
-            .attr('y', 750)
-            .text('Lum Difference')
+    var x_h2 = d3.scaleLinear()
+                    .domain([Math.min(...MinMaxSmo), Math.max(...MinMaxSmo)])
+                    .range([0, 500]);
+    svg_histPlot2.append('g')
+                .attr('transform', 'translate(50,650)') 
+                .call(d3.axisBottom(x_h2).tickValues([]));
+    svg_histPlot2.append('text')
+                .attr('class', 'hist2Text')
+                .attr('text-anchor', 'end')
+                .attr('x', 350)
+                .attr('y', 710)
+                .text('Smoothness')
 
     // Draw the Y-Axis
-    var y3 = d3.scaleLinear()
-            .domain([Math.min(...MinMaxSal), Math.max(...MinMaxSal)])        
-            .range([200, 0]);
-
-    var col3 = d3.scaleSequential()
-                .domain([Math.min(...MinMaxVal), Math.max(...MinMaxVal)])  
-                .interpolator(d3.interpolateGreens);
-
-    svg_helpgraph.append('g')
-            .attr('transform', 'translate(50,525)')   
-            .call(d3.axisLeft(y3).tickValues([]));
-    svg_helpgraph.append('text')
-            .attr('class', 'scatText')
+    var y_h2 = d3.scaleLinear()
+                .domain([0, 500])    
+                .range([625, 0]);
+    svg_histPlot2.append('g')
+            .attr('transform', 'translate(50,37.5)')   
+            .call(d3.axisLeft(y_h2).tickValues([]));
+    svg_histPlot2.append('text')
+            .attr('class', 'hist2Text')
             .attr('text-anchor', 'end')
-            .attr('x', -575)
+            .attr('x', -350)
             .attr('y', 35)
             .attr('transform', 'rotate(-90)')
-            .text('Saliency')
-    for(i = 0; i < valScat.length; i++) {
-        svg_helpgraph.append('circle')
-                    .attr('class', 'scatCirc')
-                    .attr('index', function() { return i; })
-                    .attr('cx', function(d) { return x3(valScat[i][2]) + 50; } )
-                    .attr('cy', function(d) { return y3(valScat[i][1]) + 525; } )
-                    .attr('r', 5)
-                    .attr('stroke', '#A8A8A8')
-                    .attr('fill', function(d) { return col3(valScat[i][0])})
-                    .on('mouseover', function() {
-                        svg_helpgraph.selectAll('text.finText').remove();
-                        var idMap = d3.select(this).attr('index');
-                        drawHelpermap(valScat[idMap][5]);
-                        svg_helpgraph.append('text')
-                                    .attr('class', 'finText')
-                                    .attr('text-anchor', 'end')
-                                    .attr('x', 400)
-                                    .attr('y', 20)
-                                    .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Saliency: ' + d3.format('.2f')(valScat[idMap][1]));
-                    });
+            .text('Count')
+
+    var col3 = d3.scaleSequential()
+                .domain([Math.min(...MinMaxSmo) * 250, Math.max(...MinMaxSmo)])  
+                .interpolator(d3.interpolateGreens);
+
+    var hist2_temp = {};
+    var sort_hist2 = [];
+    for(i = 0; i < valArr.length; i++) {
+        smoVal = Math.round(valArr[i][3] * 1000)/1000;
+        hist2_temp[smoVal] = (hist2_temp[smoVal]||0) + 1;
     }
 
+    for(var key in hist2_temp) {
+        sort_hist2[sort_hist2.length] = key;
+    }
+    sort_hist2.sort();
 
-   
-    // // Weights: LD v All
-    // // Draw the X-Axis
-    // var x5 = d3.scaleLinear()
-    //         .domain([Math.min(...MinMaxLD), Math.max(...MinMaxLD)])
-    //         .range([0, 900]);
-    // svg_helpAllgraph.append('g')
-    //         .attr('transform', 'translate(50,625)') 
-    //         .call(d3.axisBottom(x5).tickValues([]));
-    // svg_helpAllgraph.append('text')
-    //         .attr('class', 'scatText')
-    //         .attr('text-anchor', 'end')
-    //         .attr('x', 500)
-    //         .attr('y', 650)
-    //         .text('Lum Difference')
+    var hist2_count = {};
+    for(var i = 0; i < sort_hist2.length; i++) {
+        hist2_count[sort_hist2[i]] = hist2_temp[sort_hist2[i]];
+    }
 
-    // // Draw the Y-Axis
-    // var y5 = d3.scaleLinear()
-    //         .domain([
-    //             Math.min(Math.min(...MinMaxPU), Math.min(...MinMaxSal), Math.min(...MinMaxSmo)), 
-    //             Math.max(Math.max(...MinMaxPU), Math.max(...MinMaxSal), Math.max(...MinMaxSmo))
-    //         ])
-    //         // .domain([
-    //         //     Math.min(Math.min(...MinMaxLBO) * val_lboSimL, Math.min(...MinMaxPU) * val_puSimL, Math.min(...MinMaxSal) * val_salSimL, Math.min(...MinMaxSmo) * val_smoSimL), 
-    //         //     Math.max(Math.max(...MinMaxLBO) * val_lboSimL, Math.max(...MinMaxPU) * val_puSimL, Math.max(...MinMaxSal) * val_salSimL, Math.max(...MinMaxSmo) * val_smoSimL)
-    //         // ])
-    //         .range([600, 0]);
+    var lenSmo = Object.keys(hist2_count).length
+    var minSmo = (Object.keys(hist2_count))[0]
+    var maxSmo = Object.keys(hist2_count)[lenSmo - 1]
 
-    // svg_helpAllgraph.append('g')
-    //         .attr('transform', 'translate(50,25)')   
-    //         .call(d3.axisLeft(y5).tickValues([]));
-    // svg_helpAllgraph.append('text')
-    //         .attr('class', 'scatText')
-    //         .attr('text-anchor', 'end')
-    //         .attr('x', -275)
-    //         .attr('y', 35)
-    //         .attr('transform', 'rotate(-90)')
-    //         .text('Parameters')
-    // for(i = 0; i < valScat.length; i++) {
-    //     // Saliency
-    //     svg_helpAllgraph.append('circle')
-    //                 .attr('class', 'scatCirc')
-    //                 .attr('index', function() { return i; })
-    //                 .attr('cx', function(d) { return x5(valScat[i][2]) + 50; } )
-    //                 // .attr('cy', function(d) { return y5(valScat[i][1] * val_salSimL) + 25; } )
-    //                 .attr('cy', function(d) { return y5(valScat[i][1]) + 25; } )
-    //                 .attr('r', 5)
-    //                 .attr('stroke', '#A8A8A8')
-    //                 .attr('fill', function(d) { return col3(valScat[i][0])})
-    //                 .on('mouseover', function() {
-    //                     svg_helpAllgraph.selectAll('text.finText').remove();
-    //                     var idMap = d3.select(this).attr('index');
-    //                     drawHelpermap(valScat[idMap][5]);
-    //                     svg_helpAllgraph.append('text')
-    //                                 .attr('class', 'finText')
-    //                                 .attr('text-anchor', 'end')
-    //                                 .attr('x', 400)
-    //                                 .attr('y', 20)
-    //                                 .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Saliency: ' + d3.format('.2f')(valScat[idMap][1]));
-    //                 });
-    //     // Smoothness
-    //     svg_helpAllgraph.append('circle')
-    //                 .attr('class', 'scatCirc')
-    //                 .attr('index', function() { return i; })
-    //                 .attr('cx', function(d) { return x5(valScat[i][2]) + 50; } )
-    //                 // .attr('cy', function(d) { return y5(valScat[i][4] * val_smoSimL) + 25; } )
-    //                 .attr('cy', function(d) { return y5(valScat[i][4]) + 25; } )
-    //                 .attr('r', 5)
-    //                 .attr('stroke', '#A8A8A8')
-    //                 .attr('fill', function(d) { return col2(valScat[i][0])})
-    //                 .on('mouseover', function() {
-    //                     svg_helpAllgraph.selectAll('text.finText').remove();
-    //                     var idMap = d3.select(this).attr('index');
-    //                     drawHelpermap(valScat[idMap][5]);
-    //                     svg_helpAllgraph.append('text')
-    //                                 .attr('class', 'finText')
-    //                                 .attr('text-anchor', 'end')
-    //                                 .attr('x', 400)
-    //                                 .attr('y', 20)
-    //                                 .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', Smoothness: ' + d3.format('.2f')(valScat[idMap][4]));
-    //                 });
-    //     // PU
-    //     svg_helpAllgraph.append('circle')
-    //                 .attr('class', 'scatCirc')
-    //                 .attr('index', function() { return i; })
-    //                 .attr('cx', function(d) { return x5(valScat[i][2]) + 50; } )
-    //                 // .attr('cy', function(d) { return y5(valScat[i][3] * val_puSimL) + 25; } )
-    //                 .attr('cy', function(d) { return y5(valScat[i][3]) + 25; } )
-    //                 .attr('r', 5)
-    //                 .attr('stroke', '#A8A8A8')
-    //                 .attr('fill', function(d) { return col1(valScat[i][0])})
-    //                 .on('mouseover', function() {
-    //                     svg_helpAllgraph.selectAll('text.finText').remove();
-    //                     var idMap = d3.select(this).attr('index');
-    //                     drawHelpermap(valScat[idMap][5]);
-    //                     svg_helpAllgraph.append('text')
-    //                                 .attr('class', 'finText')
-    //                                 .attr('text-anchor', 'end')
-    //                                 .attr('x', 400)
-    //                                 .attr('y', 20)
-    //                                 .text('Final: ' + d3.format('.2f')(valScat[idMap][0]) + ', P.Uniformity: ' + d3.format('.2f')(valScat[idMap][3]));
-    //                 });
-
-    // }
+    for(var j=0; j<lenSmo; j++) {
+        svg_histPlot2.append('rect')
+                .attr('class', 'hist2Rect')
+                .attr('x', 50 + (j*(500/lenSmo)))
+                .attr('y', 650 - Object.values(hist2_count)[j]/1.5)
+                .attr('width', 500/lenSmo)
+                .attr('height', Object.values(hist2_count)[j]/1.5)
+                .attr('fill', function() { return col3(Object.values(hist2_count)[j]); })
+                .attr('stroke', 'black')
+                .attr('stroke-width', 0.15);
+    svg_histPlot2.append('text')
+                .attr('class', 'finh2Text')
+                .attr('x', 50 + (j*(500/lenSmo)))
+                .attr('y', 650 - 10 - Object.values(hist2_count)[j]/1.5)
+                .style('font-size', '10px')
+                .text(Object.values(hist2_count)[j]);
+    svg_histPlot2.append('text')
+                .attr('class', 'tickh2Text')
+                .attr('x', -687.5)
+                .attr('y', 60 + (j*(500/lenSmo)))
+                .style('font-size', '10px')
+                .attr('transform', 'rotate(-90)')
+                .text(Object.keys(hist2_count)[j]);
+    }
 }
