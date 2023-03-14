@@ -105,11 +105,11 @@ function drawSliderSal() {
 //.................................................................................................................................................................................................................//
 // 2D SLICE
 function drawSlice2D(lum, sal_init, sal_fin) {
-    for (var c=0; c<color_dict.length; c++) {
-        salVal = color_dict[c].saliency;
-        var LABval = color_dict[c].lab;
-        var fillColor = color_dict[c].fill;
-        var colorName = color_dict[c].name;
+    for (var c=0; c<colorDict.length; c++) {
+        salVal = colorDict[c].saliency;
+        var LABval = colorDict[c].LAB;
+        var fillColor = colorDict[c].fill;
+        var colorName = colorDict[c].name;
         // Draw Slice - Luminance & Saliency Constraint
         if(LABval[0] == lum && (salVal*100) <= sal_fin && (salVal*100) >= sal_init) {
             svg_slice2D.append('rect')
@@ -121,7 +121,7 @@ function drawSlice2D(lum, sal_init, sal_fin) {
                     .attr('width', salVal*30)
                     .attr('height', salVal*30)
                     .style('fill', fillColor)
-                    .style('stroke-width', 0.25)
+                    .style('stroke-width', 0.5)
                     .style('stroke', 'black')
                     .on('mouseover', function(d) {
                         // Increase Color Size
@@ -131,24 +131,16 @@ function drawSlice2D(lum, sal_init, sal_fin) {
                             .attr('height', salVal*200)
                             .style('opacity', 1.01)
                             .raise();
-                        // // Current Selected Color
-                        // var currSel = d3.select(this).attr('style');
-                        // d3.select('#currSel').attr('style', currSel);
                     })
                     .on('mouseout', function() {
                         svg_slice2D.selectAll('rect').remove();
                         drawSlice2D(lum, sal_init, sal_fin);
-                    })
-                    .on('mousemove', function() {
-                        d3.select(this)
-                          .call(drawHist);
                     })
                     .on('click', function() {
                         d3.select(this)
                           .call(addColor);
                     })
                     .append('title').text(function() { return LABval; });
-                    // .append('title').text(function() { return ['LAB: (' + LABval + '), Name: ' + colorName]; });
         }
     }
 }
