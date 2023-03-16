@@ -55,7 +55,7 @@ function scoreFuncts() {
                         .append('svg')
                         .attr('preserveAspectRatio', 'xMinYMin meet')
                         .attr('viewBox', '0 0 1500 150')
-                        .style('background', '#222021')
+                        .style('background', '#22021')
                         .classed('svg-content', true);
 
         // Draw Sliders
