@@ -155,7 +155,7 @@ function drawLum() {
                        .step(1)
                        .default([0,100])
                        .displayValue(false)
-                       .fill('#761137')
+                       .fill('#f6bd60')
                        .handle(
                             d3.symbol()
                             .type(d3.symbolCircle)
@@ -215,7 +215,7 @@ function drawCol() {
                         .ticks(0)
                         .default(0.2)
                         .displayValue(false)
-                        .fill('#761137')
+                        .fill('#f6bd60')
                         .handle(
                             d3.symbol()
                             .type(d3.symbolCircle)
@@ -280,7 +280,7 @@ function drawPU() {
                         .ticks(0)
                         .default(0.5)
                         .displayValue(false)
-                        .fill('#761137')
+                        .fill('#81b29a')
                         .handle(
                             d3.symbol()
                             .type(d3.symbolCircle)
@@ -347,7 +347,7 @@ function drawSmo() {
                         .ticks(0)
                         .default(0.8)
                         .displayValue(false)
-                        .fill('#761137')
+                        .fill('#81b29a')
                         .handle(
                             d3.symbol()
                             .type(d3.symbolCircle)
@@ -415,7 +415,7 @@ function drawKey() {
                         .step(2)
                         .default(17)
                         .displayValue(false)
-                        .fill('#761137')
+                        .fill('#3d5a80')
                         .handle(
                             d3.symbol()
                             .type(d3.symbolCircle)
