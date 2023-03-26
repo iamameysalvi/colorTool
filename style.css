@@ -166,6 +166,10 @@ input[type=text] {
     right: 0;
 }
 
+.dropAdjCol{
+    fill:linear-gradient(45deg, '#FFAAAA', '#734C8F');
+}
+
 .colorSearch-items div {
     padding: 10px;
     cursor: pointer;
