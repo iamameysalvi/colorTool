@@ -49,22 +49,43 @@ onmessage = function(e) {
 
     // Evaluation of Score (constraints so far: Perceptual Uniformity, Smoothness, Name Difference, Colorfulness)
     function evalPalette(palette, col_len, minl, maxl, pen) {
+        var evalPal = [];
         testCnt = testCnt + 1;
         var sample_sal = col_len;
         var finScore = 0;
 
+        // Create Colormap
+        var palLen = palette.length;
+        var evalRamp = [];
+        for (var i=0; i<palLen; i++) {
+            var v = i/(palLen-1);
+            evalRamp.push({
+                value: v,
+                rgb: palette[i].RGB
+            });
+        }
+        evalColormap = new ColorMap(evalRamp);
+
+        // Sample the Colormap
+        var evalSamples = 100;
+        for (var i=0; i<evalSamples; i++) {
+            var evalVal = i/(evalSamples-1);
+            var evalCol = evalColormap.mapValue(evalVal, true);
+            evalPal.push(d3.lab(evalCol));
+        }
+
         // PERCEPTUAL UNIFORMITY
         var cie00_dist = 0;
-        for (var i = 1; i < sample_sal; i++) {
-            var cie00_dist2 = d3.lab(d3.color(palette[i].fill));
-            var cie00_dist1 = d3.lab(d3.color(palette[i-1].fill));            
-            // var cie00_dist2 = c3.color[index(d3.color(palette[i].fill))];
-            // var cie00_dist1 = c3.color[index(d3.color(palette[i-1].fill))];
+        for (var i = 1; i < evalSamples; i++) {
+            // var cie00_dist2 = d3.lab(d3.color(palette[i].fill));
+            // var cie00_dist1 = d3.lab(d3.color(palette[i-1].fill));
+            var cie00_dist2 = evalPal[i];
+            var cie00_dist1 = evalPal[i-1];
             var perc_dist = cie00Distance(cie00_dist2, cie00_dist1);
             var cie00_dist = cie00_dist + perc_dist;
-        }        
+        }
         // Mean PU
-        var meancie00Dist = cie00_dist/(sample_sal);
+        var meancie00Dist = cie00_dist/(evalSamples);
 
         // Normalization of PU
         var minUnif = 0;
@@ -79,8 +100,9 @@ onmessage = function(e) {
         var angleDiff = 0;
 
         // Push points in an array
-        for(i = 0; i < sample_sal; i++) {
-            ptsSmo.push(palette[i].LAB);
+        for(i = 0; i < evalSamples; i++) {
+            // ptsSmo.push(palette[i].LAB);
+            ptsSmo.push(evalPal[i]);
         }
 
         // Create edges for points to neighbors
@@ -103,9 +125,13 @@ onmessage = function(e) {
             if(len2 == 0) { len2 = 1; }
             return Math.acos(dot/(Math.sqrt(len1) * Math.sqrt(len2)));
         }
+
         for(var i = 0; i < edgesSmoNew.length - 1; i++) {
-            var vectorA = [edgesSmoNew[i].target[0] - edgesSmoNew[i].source[0], edgesSmoNew[i].target[1] - edgesSmoNew[i].source[1], edgesSmoNew[i].target[2] - edgesSmoNew[i].source[2]];
-            var vectorB = [edgesSmoNew[i+1].source[0] - edgesSmoNew[i+1].target[0], edgesSmoNew[i+1].source[1] - edgesSmoNew[i+1].target[1], edgesSmoNew[i+1].source[2] - edgesSmoNew[i+1].target[2]];
+            // var vectorA = [edgesSmoNew[i].target[0] - edgesSmoNew[i].source[0], edgesSmoNew[i].target[1] - edgesSmoNew[i].source[1], edgesSmoNew[i].target[2] - edgesSmoNew[i].source[2]];
+            // var vectorB = [edgesSmoNew[i+1].source[0] - edgesSmoNew[i+1].target[0], edgesSmoNew[i+1].source[1] - edgesSmoNew[i+1].target[1], edgesSmoNew[i+1].source[2] - edgesSmoNew[i+1].target[2]];
+            // var angle = angle_between(vectorA[0],vectorA[1],vectorA[2],vectorB[0],vectorB[1],vectorB[2]);
+            var vectorA = [edgesSmoNew[i].target.l - edgesSmoNew[i].source.l, edgesSmoNew[i].target.a - edgesSmoNew[i].source.a, edgesSmoNew[i].target.b - edgesSmoNew[i].source.b];
+            var vectorB = [edgesSmoNew[i+1].source.l - edgesSmoNew[i+1].target.l, edgesSmoNew[i+1].source.a - edgesSmoNew[i+1].target.a, edgesSmoNew[i+1].source.b - edgesSmoNew[i+1].target.b];
             var angle = angle_between(vectorA[0],vectorA[1],vectorA[2],vectorB[0],vectorB[1],vectorB[2]);
             angleDiff = angleDiff + angle;
         }
@@ -114,7 +140,8 @@ onmessage = function(e) {
         var minSmo = 0;
         var maxSmo = 3.142;
         var normSmo = (angleDiff - minSmo)/(maxSmo - minSmo);
-        var angleDifference = normSmo/sample_sal;
+        var angleDifference = normSmo/evalSamples;
+        // console.log(angleDifference)
 
         // NAME DIFFERENCE
         var name_diff = 0;
@@ -165,16 +192,16 @@ onmessage = function(e) {
 
         // COLORFULNESS: Length of the colormap in LAB space
         var eucl_dist = 0;
-        for (var i = 1; i < sample_sal; i++) {
-            var eucl_dist2 = d3.lab(d3.color(palette[i].fill));
-            var eucl_dist1 = d3.lab(d3.color(palette[i-1].fill));            
-            // var cie00_dist2 = c3.color[index(d3.color(palette[i].fill))];
-            // var cie00_dist1 = c3.color[index(d3.color(palette[i-1].fill))];
+        for (var i = 1; i < evalSamples; i++) {
+            // var eucl_dist2 = d3.lab(d3.color(palette[i].fill));
+            // var eucl_dist1 = d3.lab(d3.color(palette[i-1].fill));
+            var eucl_dist2 = evalPal[i];
+            var eucl_dist1 = evalPal[i-1];
             var cie76_dist = cie76Distance(eucl_dist2, eucl_dist1);
             var eucl_dist = eucl_dist + cie76_dist;
         }        
         // Mean EUCL
-        var meancie76Dist = eucl_dist/(sample_sal);
+        var meancie76Dist = eucl_dist/(evalSamples);
 
         // Weights
         if(selLum == 'Linear') {
@@ -404,10 +431,10 @@ onmessage = function(e) {
 
     function simulatedAnnealing2FindBestPalette(size, evaluateFunc, minl, maxl) {
         var iterate_times = 0;
-        var max_temper = 100000; // initial temperature
+        var max_temper = 1000; // initial temperature
         var dec = 0.999; // decrementation
         // var dec = val_algoIter; 
-        var max_iteration_times = 10000000; 
+        var max_iteration_times = 100000000000; 
         var end_temper = 0.001; // end temperature
         var cur_temper = max_temper;
 
@@ -430,6 +457,7 @@ onmessage = function(e) {
                     id: color_palette_2,
                     score: evaluateFunc(color_palette_2, size, minl, maxl, penColors)
                 };
+                // console.log(o2.id)
                 var delta_score = o.score - o2.score;
                 if (delta_score <= 0 || delta_score > 0 && Math.random() <= Math.exp((-delta_score) / cur_temper)) {
                     o = o2;
@@ -442,6 +470,7 @@ onmessage = function(e) {
                 }
             }
             cur_temper *= dec;
+            console.log(cur_temper)
             if (iterate_times > max_iteration_times) {
                 break;
             }

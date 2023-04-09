@@ -65,9 +65,13 @@ function regenColormap() {
     myWorker = new Worker('worker.js');
 
     // Post Message in Worker
-    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
     myWorker.onmessage = function(e) {
+        // console.log(e.data[0])
         drawColormap(e.data[0]);
+        drawLinegraph(e.data[0]);
+        drawPlot(e.data[0]);
+        // console.log(e.data[2])
         // loader.style.visibility = "hidden";
         // debugArr = []
         // debugArr.push(e.data[2]);
@@ -327,7 +331,7 @@ function drawColor(data, sel) {
                     ];
 
                     // Select L* values for which color can be added - SUGGESTION
-                    //......................................................................................c3.color[index] may get non-displayabel colors (Match with colorDict values for a safer solution)
+                    //......................................................................................c3.color[index] may get non-displayable colors (Match with colorDict values for a safer solution)
                     var possL = new Set();
                     var selColor = c3.color[index(d3.color(rectDrop.data()[0].fill))];
                     for(i=0; i<colorDict.length; i++) {
@@ -466,8 +470,10 @@ function drawColor(data, sel) {
                             var dropWd = Math.ceil(paletteLen * ptTest[0]/canWd) * (canWd/paletteLen) - dropX;
 
                             // Adjust color L* based on position
-                            var lum_min = 0;
-                            var lum_max = 100;
+                            // var lum_min = 0;
+                            // var lum_max = 100;
+                            var lum_min = valLum[0];
+                            var lum_max = valLum[1];
                             var samp_lum = dropPos/(paletteLen-1);
                             if(selLum == 'Linear') {
                                 var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
@@ -549,6 +555,8 @@ function drawColor(data, sel) {
 
                             // Draw the Dropped Color on Slider Canvas (before L* changes (show original color on canvas))
                             drawDropCol(dropX, dropWd, rectDrop, dropRect);
+                            flagLPos = false;
+                            flagRPos = false;
 
                             drawColor(data, sel);
                             svg_colormap.selectAll('text.sliderText').remove();
@@ -673,8 +681,10 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                 if(oldLPos > pos) {
                                     for(i = pos; i < oldLPos; i++) {
                                         // Adjust color L* based on position
-                                        var lum_min = 0;
-                                        var lum_max = 100;
+                                        // var lum_min = 0;
+                                        // var lum_max = 100;
+                                        var lum_min = valLum[0];
+                                        var lum_max = valLum[1];
                                         var samp_lum = i/(paletteLen-1);
                                         if(selLum == 'Linear') {
                                             var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
@@ -690,9 +700,9 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
     
                                         // Adjusted Color Displayability Test
                                         var testDisplay =  d3.lab(
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                            lum_exp,
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                         );
     
                                         var distDisplay = 1000;
@@ -704,25 +714,25 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                             var newRect = ({
                                                 pos: i,
                                                 name:  nameDistribution(d3.lab(
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 )),
                                                 fill:  fill_color(
                                                     d3.rgb(
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                     )),
                                                 RGB: [
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                 ],                
                                                 LAB: [
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 ],
                                                 sel: 1
                                             });
@@ -740,18 +750,6 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                                     }
                                                 }
                                             }
-                                            // for(i=0; i<colorDict.length; i++) {
-                                            //     if(testDisplay.l == colorDict[i].LAB[0]) {
-                                            //         selColors.push(colorDict[i]);
-                                            //         for(j=0; j<selColors.length; j++) {
-                                            //             var localDist = Math.sqrt((selColors[j].LAB[0] - testDisplay.l)**2 + (selColors[j].LAB[1] - testDisplay.a)**2 + (selColors[j].LAB[2] - testDisplay.b)**2);
-                                            //             if(localDist < distDisplay) {
-                                            //                 distDisplay = localDist;
-                                            //                 distColor = selColors[j];
-                                            //             }
-                                            //         }
-                                            //     }
-                                            // }
                                             // Update the color
                                             var newRect = ({
                                                 pos: i,
@@ -774,7 +772,6 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                     }
                                     slideInit();
                                     oldLPos = pos;
-                                    console.log(datasetDrop)
                                 }
                                 else if(oldLPos < pos) {
                                     for(i = oldLPos; i < pos + 1; i++) {
@@ -782,7 +779,6 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                     }
                                     slideInit();
                                     oldLPos = pos;
-                                    console.log(datasetDrop)
                                 }
                             }
                             else if(flagLPos == false) {
@@ -790,8 +786,10 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                     flagLPos = true;
                                     for(i = pos; i < tempLPos + 1; i++) {
                                         // Adjust color L* based on position
-                                        var lum_min = 0;
-                                        var lum_max = 100;
+                                        // var lum_min = 0;
+                                        // var lum_max = 100;
+                                        var lum_min = valLum[0];
+                                        var lum_max = valLum[1];
                                         var samp_lum = i/(paletteLen-1);
                                         if(selLum == 'Linear') {
                                             var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
@@ -807,9 +805,9 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
     
                                         // Adjusted Color Displayability Test
                                         var testDisplay =  d3.lab(
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                            lum_exp,
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                         );
     
                                         var distDisplay = 1000;
@@ -821,25 +819,25 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                             var newRect = ({
                                                 pos: i,
                                                 name:  nameDistribution(d3.lab(
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 )),
                                                 fill:  fill_color(
                                                     d3.rgb(
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                     )),
                                                 RGB: [
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                 ],                
                                                 LAB: [
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 ],
                                                 sel: 1
                                             });
@@ -857,18 +855,6 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                                     }
                                                 }
                                             }
-                                            // for(i=0; i<colorDict.length; i++) {
-                                            //     if(testDisplay.l == colorDict[i].LAB[0]) {
-                                            //         selColors.push(colorDict[i]);
-                                            //         for(j=0; j<selColors.length; j++) {
-                                            //             var localDist = Math.sqrt((selColors[j].LAB[0] - testDisplay.l)**2 + (selColors[j].LAB[1] - testDisplay.a)**2 + (selColors[j].LAB[2] - testDisplay.b)**2);
-                                            //             if(localDist < distDisplay) {
-                                            //                 distDisplay = localDist;
-                                            //                 distColor = selColors[j];
-                                            //             }
-                                            //         }
-                                            //     }
-                                            // }
                                             // Update the color
                                             var newRect = ({
                                                 pos: i,
@@ -891,7 +877,6 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                     }
                                     slideInit();
                                     oldLPos = pos;
-                                    console.log(datasetDrop)
                                 }
                                 else if (tempLPos < pos) {
                                     for(i = tempLPos; i < pos + 1; i++) {
@@ -899,7 +884,6 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                     }
                                     slideInit();
                                     oldLPos = pos;
-                                    console.log(datasetDrop)
                                 }
                             }
                         }
@@ -909,11 +893,12 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
 
                             if (flagRPos == true) {
                                 if(oldRPos < pos) {
-                                    console.log('Flag Switched Forward')
                                     for(i = oldRPos + 1; i < pos + 1; i++) {
                                         // Adjust color L* based on position
-                                        var lum_min = 0;
-                                        var lum_max = 100;
+                                        // var lum_min = 0;
+                                        // var lum_max = 100;
+                                        var lum_min = valLum[0];
+                                        var lum_max = valLum[1];
                                         var samp_lum = i/(paletteLen-1);
                                         if(selLum == 'Linear') {
                                             var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
@@ -929,9 +914,9 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
     
                                         // Adjusted Color Displayability Test
                                         var testDisplay =  d3.lab(
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                            lum_exp,
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                         );
     
                                         var distDisplay = 1000;
@@ -943,25 +928,25 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                             var newRect = ({
                                                 pos: i,
                                                 name:  nameDistribution(d3.lab(
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 )),
                                                 fill:  fill_color(
                                                     d3.rgb(
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                     )),
                                                 RGB: [
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                 ],                
                                                 LAB: [
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 ],
                                                 sel: 1
                                             });
@@ -979,18 +964,6 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                                     }
                                                 }
                                             }
-                                            // for(i=0; i<colorDict.length; i++) {
-                                            //     if(testDisplay.l == colorDict[i].LAB[0]) {
-                                            //         selColors.push(colorDict[i]);
-                                            //         for(j=0; j<selColors.length; j++) {
-                                            //             var localDist = Math.sqrt((selColors[j].LAB[0] - testDisplay.l)**2 + (selColors[j].LAB[1] - testDisplay.a)**2 + (selColors[j].LAB[2] - testDisplay.b)**2);
-                                            //             if(localDist < distDisplay) {
-                                            //                 distDisplay = localDist;
-                                            //                 distColor = selColors[j];
-                                            //             }
-                                            //         }
-                                            //     }
-                                            // }
                                             // Update the color
                                             var newRect = ({
                                                 pos: i,
@@ -1013,26 +986,24 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                     }
                                     slideInit();
                                     oldRPos = pos;
-                                    console.log(datasetDrop)
                                 }
                                 else if(oldRPos > pos) {
-                                    console.log('Flag Switched Taken back')
                                     for(i = pos + 1; i < oldRPos + 1; i++) {
                                         datasetDrop[i].sel = 0;
                                     }
                                     slideInit();
                                     oldRPos = pos;
-                                    console.log(datasetDrop)
                                 }
                             }
                             else if(flagRPos == false) {
                                 if (tempRPos < pos) {
-                                    console.log('Taken forward')
                                     flagRPos = true;
                                     for(i = tempRPos; i < pos + 1; i++) {
                                         // Adjust color L* based on position
-                                        var lum_min = 0;
-                                        var lum_max = 100;
+                                        // var lum_min = 0;
+                                        // var lum_max = 100;
+                                        var lum_min = valLum[0];
+                                        var lum_max = valLum[1];
                                         var samp_lum = i/(paletteLen-1);
                                         if(selLum == 'Linear') {
                                             var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * samp_lum)/5);       // For Linear Profile
@@ -1045,12 +1016,12 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                                 var lum_exp = 5 * Math.round((lum_min + (lum_max-lum_min) * (paletteLen-i-1)/(Math.floor(paletteLen/2)))/5);   // For Diverging Profile (After Midpoint)
                                             }
                                         }
-    
+
                                         // Adjusted Color Displayability Test
                                         var testDisplay =  d3.lab(
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                            d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                            lum_exp,
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                            Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                         );
     
                                         var distDisplay = 1000;
@@ -1062,25 +1033,25 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                             var newRect = ({
                                                 pos: i,
                                                 name:  nameDistribution(d3.lab(
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 )),
                                                 fill:  fill_color(
                                                     d3.rgb(
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                        Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                     )),
                                                 RGB: [
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).r),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).g),
-                                                    Math.round(d3.rgb(d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1],
+                                                        rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]
                                                 ],                
                                                 LAB: [
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).l, 
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).a,
-                                                    d3.lab(lum_exp, rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2]).b
+                                                    lum_exp,
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
+                                                    Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                                 ],
                                                 sel: 1
                                             });
@@ -1119,16 +1090,13 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                         datasetDrop.splice(i, 1, newRect);       
                                     }
                                     slideInit();
-                                    console.log(datasetDrop)
                                     oldRPos = pos;
                                 }
                                 else if (tempRPos > pos) {
-                                    console.log('Taken back')
                                     for(i = pos + 1; i < tempRPos + 1; i++) {
                                         datasetDrop[i].sel = 0;                                       
                                     }
                                     slideInit();
-                                    console.log(datasetDrop)
                                     oldRPos = pos;
                                 }
                             }
@@ -1228,9 +1196,13 @@ function slideInit() {
     myWorker = new Worker('worker.js');
 
     // Post Message in Worker
-    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
     myWorker.onmessage = function(e) {
+        // console.log(e.data[0])
         drawColormap(e.data[0]);
+        drawLinegraph(e.data[0]);
+        drawPlot(e.data[0]);
+        // console.log(e.data[3]);
         // loader.style.visibility = "hidden";
         // debugArr = []
         // debugArr.push(e.data[2]);
@@ -1304,9 +1276,13 @@ function initPos(pos, rectCol) {
     myWorker = new Worker('worker.js');
 
     // Post Message in Worker
-    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+    myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
     myWorker.onmessage = function(e) {
+        // console.log(e.data[0])
         drawColormap(e.data[0]);
+        drawLinegraph(e.data[0]);
+        drawPlot(e.data[0]);
+        // console.log(e.data[3]);
         // loader.style.visibility = "hidden";
         // debugArr = []
         // debugArr.push(e.data[2]);

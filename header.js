@@ -65,6 +65,7 @@ function scoreFuncts() {
         drawPU();
         drawSmo();
         drawKey();
+        drawMapLen();
         // Draw Profile Buttons
         selectOption();
     }
@@ -80,48 +81,65 @@ function scoreFuncts() {
 
 // HEADERS
 function drawHeaders() {
-    // Luminance Heading
+    // Smoothness Heading
     svg_functMenu.append('text')
                 .attr('x', 10)
                 .attr('y', 30)
-                .text('Luminance')
-                .style('font-size', 12)
-                .attr('fill', '#DADADA');
-
-    // Color Change Heading
-    svg_functMenu.append('text')
-                .attr('x', 10)
-                .attr('y', 90)
-                .text('Color Change')
-                .style('font-size', 12)
-                .attr('fill', '#DADADA');
-
-    svg_functMenu.append('text')
-                .attr('x', 230)
-                .attr('y', 120)
-                .text('Less Tolerance')
-                .style('font-size', 12)
-                .attr('fill', '#DADADA');
-    svg_functMenu.append('text')
-                .attr('x', 10)
-                .attr('y', 120)
-                .text('High Tolerance')
+                .text('Smoothness')
                 .style('font-size', 12)
                 .attr('fill', '#DADADA');
 
     // Perceptual Uniformity Heading
     svg_functMenu.append('text')
-                .attr('x', 400)
-                .attr('y', 30)
+                .attr('x', 10)
+                .attr('y', 90)
                 .text('Perceptual Uniformity')
                 .style('font-size', 12)
                 .attr('fill', '#DADADA');
 
-    // Smoothness Heading
+    // Colorfulness Heading
+    svg_functMenu.append('text')
+                .attr('x', 400)
+                .attr('y', 30)
+                .text('Colorfulness/ No. of Colors')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+    svg_functMenu.append('text')
+                .attr('x', 400)
+                .attr('y', 60)
+                .text('High')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+    svg_functMenu.append('text')
+                .attr('x', 525)
+                .attr('y', 60)
+                .text('Medium')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+    svg_functMenu.append('text')
+                .attr('x', 675)
+                .attr('y', 60)
+                .text('Low')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+
+    // Color Preference Heading
     svg_functMenu.append('text')
                 .attr('x', 400)
                 .attr('y', 90)
-                .text('Smoothness')
+                .text('User Selected Color Preference')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+    svg_functMenu.append('text')
+                .attr('x', 400)
+                .attr('y', 120)
+                .text('High')
+                .style('font-size', 12)
+                .attr('fill', '#DADADA');
+    svg_functMenu.append('text')
+                .attr('x', 675)
+                .attr('y', 120)
+                .text('Low')
                 .style('font-size', 12)
                 .attr('fill', '#DADADA');
 
@@ -131,6 +149,14 @@ function drawHeaders() {
                 .attr('y', 30)
                 .text('Luminance Profile')
                 .style('font-size', 16)
+                .attr('fill', '#DADADA');
+
+    // Luminance Change Heading
+    svg_functMenu.append('text')
+                .attr('x', 1150)
+                .attr('y', 30)
+                .text('Luminance')
+                .style('font-size', 12)
                 .attr('fill', '#DADADA');
 
     // Key Points Heading
@@ -143,77 +169,16 @@ function drawHeaders() {
 }
 
 // SLIDERS
-// Luminance Slider
-function drawLum() {
-    var dataLum = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
-    var sliderLum = d3.sliderBottom()
-                       .min(d3.min(dataLum))
-                       .max(d3.max(dataLum))
-                       .width(300)
-                       .tickFormat(d3.format('.2d'))
-                       .ticks(0)
-                       .step(1)
-                       .default([0,100])
-                       .displayValue(false)
-                       .fill('#761137')
-                       .handle(
-                            d3.symbol()
-                            .type(d3.symbolCircle)
-                            .size(100)()
-                        )
-                        // Onchange Value
-                        .on('onchange', new_lum => {
-                            svg_functMenu.selectAll('text.sliderLumText').remove();
-                            // For drawSlice2D function
-                            valLum = new_lum;
-                            // Text Value
-                            svg_functMenu.append('text')
-                                        .attr('class','sliderLumText')
-                                        .attr('x', 285)
-                                        .attr('y', 30)
-                                        .style('font-size', 12)
-                                        .style('fill', '#DADADA')
-                                        .text(valLum.map(d3.format('.2d')).join("-"));
-
-                            // Call Web Worker (Algorithm)
-                            if(countCol > 0) {
-                                // // Loader icon
-                                // var loader = document.getElementById('loader');
-                                // loader.style.visibility = "visible";
-
-                                // Terminate old Worker and run new Worker
-                                myWorker.terminate();
-                                myWorker = new Worker('worker.js');
-                                // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
-                                myWorker.onmessage = function(e) {
-                                    drawColormap(e.data[0]);
-                                    // loader.style.visibility = "hidden";
-                                }
-                            }
-                        });
-    // Call Slider
-    svg_functMenu.append('g').attr('transform', 'translate(15,45)').call(sliderLum);
-    // Initial Text Value
-    svg_functMenu.append('text')
-                .attr('class','sliderLumText')
-                .attr('x', 285)
-                .attr('y', 30)
-                .style('font-size', 12)
-                .style('fill', '#DADADA')
-                .text('0-100');
-}
-
-// Color Change Slider
-function drawCol() {
-    var dataCol = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
-    var sliderCol = d3.sliderBottom()
-                        .min(d3.min(dataCol))
-                        .max(d3.max(dataCol))
+// Smoothness Slider
+function drawSmo() {
+    var dataSmo = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+    var sliderSmo = d3.sliderBottom()
+                        .min(d3.min(dataSmo))
+                        .max(d3.max(dataSmo))
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(0.2)
+                        .default(0.8)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -222,18 +187,18 @@ function drawCol() {
                             .size(100)()
                         )
                         // Onchange Value
-                        .on('onchange', valCol => {
-                            svg_functMenu.selectAll('text.sliderColText').remove();
-                            colChange = valCol * 100;
-                            // valCol_D = valSal * 40;
+                        .on('onchange', valSmo => {
+                            svg_functMenu.selectAll('text.sliderSmoText').remove();
+                            valSmo_L = valSmo * 200;
+                            valSmo_D = valSmo * 200;
                             // Text Value
                             svg_functMenu.append('text')
-                                        .attr('class','sliderColText')
+                                        .attr('class','sliderSmoText')
                                         .attr('x', 285)
-                                        .attr('y', 90)
+                                        .attr('y', 30)
                                         .style('font-size', 12)
                                         .style('fill', '#DADADA')
-                                        .text(d3.format('.2f')(valCol));
+                                        .text(d3.format('.2f')(valSmo));
 
                             // Call Web Worker (Algorithm)
                             if(countCol > 0) {
@@ -245,10 +210,14 @@ function drawCol() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
+                                    drawLinegraph(e.data[0]);
+                                    drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
+                                    // debugArr = []
+                                    // debugArr.push(e.data[2]);
                                     // scatter(e.data[2]);
                                     // hist1(e.data[2]);
                                     // hist2(e.data[2]);
@@ -258,15 +227,15 @@ function drawCol() {
                         });
 
     // Call Slider
-    svg_functMenu.append('g').attr('transform', 'translate(15,105)').call(sliderCol);
+    svg_functMenu.append('g').attr('transform', 'translate(15,45)').call(sliderSmo);
     // Initial Text Value
     svg_functMenu.append('text')
-                .attr('class','sliderColText')
+                .attr('class','sliderSmoText')
                 .attr('x', 285)
-                .attr('y', 90)
+                .attr('y', 30)
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
-                .text('0.20');
+                .text('0.80');
 }
 
 // Perceptual Uniformity Slider
@@ -294,8 +263,8 @@ function drawPU() {
                             // Text Value
                             svg_functMenu.append('text')
                                         .attr('class','sliderPUText')
-                                        .attr('x', 675)
-                                        .attr('y', 30)
+                                        .attr('x', 285)
+                                        .attr('y', 90)
                                         .style('font-size', 12)
                                         .style('fill', '#DADADA')
                                         .text(d3.format('.2f')(valPU));
@@ -310,9 +279,11 @@ function drawPU() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
+                                    drawLinegraph(e.data[0]);
+                                    drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
                                     // debugArr = []
                                     // debugArr.push(e.data[2]);
@@ -325,27 +296,29 @@ function drawPU() {
                         });
 
     // Call Slider
-    svg_functMenu.append('g').attr('transform', 'translate(400,45)').call(sliderPU);
+    svg_functMenu.append('g').attr('transform', 'translate(15,105)').call(sliderPU);
     // Initial Text Value
     svg_functMenu.append('text')
                 .attr('class','sliderPUText')
-                .attr('x', 675)
-                .attr('y', 30)
+                .attr('x', 285)
+                .attr('y', 90)
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
                 .text('0.50');
 }
 
-// Smoothness Slider
-function drawSmo() {
-    var dataSmo = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
-    var sliderSmo = d3.sliderBottom()
-                        .min(d3.min(dataSmo))
-                        .max(d3.max(dataSmo))
+
+// Colorfulness Slider
+function drawMapLen() {
+    var dataMapLen = [0, 0.5, 1];
+    var sliderMapLen = d3.sliderBottom()
+                        .min(d3.min(dataMapLen))
+                        .max(d3.max(dataMapLen))
                         .width(300)
                         .tickFormat(d3.format('.2d'))
                         .ticks(0)
-                        .default(0.8)
+                        .default(0.5)
+                        .step(0.5)
                         .displayValue(false)
                         .fill('#761137')
                         .handle(
@@ -354,18 +327,18 @@ function drawSmo() {
                             .size(100)()
                         )
                         // Onchange Value
-                        .on('onchange', valSmo => {
-                            svg_functMenu.selectAll('text.sliderSmoText').remove();
-                            valSmo_L = valSmo * 200;
-                            valSmo_D = valSmo * 200;
-                            // Text Value
-                            svg_functMenu.append('text')
-                                        .attr('class','sliderSmoText')
-                                        .attr('x', 675)
-                                        .attr('y', 90)
-                                        .style('font-size', 12)
-                                        .style('fill', '#DADADA')
-                                        .text(d3.format('.2f')(valSmo));
+                        .on('onchange', valMapLen => {
+                            svg_functMenu.selectAll('text.sliderMapLenText').remove();
+                            mapLength = valMapLen * -20;
+
+                            // // Text Value
+                            // svg_functMenu.append('text')
+                            //             .attr('class','sliderMapLenText')
+                            //             .attr('x', 675)
+                            //             .attr('y', 30)
+                            //             .style('font-size', 12)
+                            //             .style('fill', '#DADADA')
+                            //             .text(d3.format('.2f')(valMapLen));
 
                             // Call Web Worker (Algorithm)
                             if(countCol > 0) {
@@ -377,12 +350,12 @@ function drawSmo() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
+                                    drawLinegraph(e.data[0]);
+                                    drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
-                                    // debugArr = []
-                                    // debugArr.push(e.data[2]);
                                     // scatter(e.data[2]);
                                     // hist1(e.data[2]);
                                     // hist2(e.data[2]);
@@ -392,15 +365,148 @@ function drawSmo() {
                         });
 
     // Call Slider
-    svg_functMenu.append('g').attr('transform', 'translate(400,105)').call(sliderSmo);
+    svg_functMenu.append('g').attr('transform', 'translate(400,45)').call(sliderMapLen);
+    // // Initial Text Value
+    // svg_functMenu.append('text')
+    //             .attr('class','sliderMapLenText')
+    //             .attr('x', 675)
+    //             .attr('y', 30)
+    //             .style('font-size', 12)
+    //             .style('fill', '#DADADA')
+    //             .text('0.50');
+}
+
+
+// Color Change / Tolerance Slider
+function drawCol() {
+    var dataCol = [0.02, 0.10, 0.18, 0.26];
+    var sliderCol = d3.sliderBottom()
+                        .min(d3.min(dataCol))
+                        .max(d3.max(dataCol))
+                        .width(300)
+                        .tickFormat(d3.format('.2d'))
+                        .ticks(0)
+                        .default(0.10)
+                        .step(0.08)
+                        .displayValue(false)
+                        .fill('#761137')
+                        .handle(
+                            d3.symbol()
+                            .type(d3.symbolCircle)
+                            .size(100)()
+                        )
+                        // Onchange Value
+                        .on('onchange', valCol => {
+                            svg_functMenu.selectAll('text.sliderColText').remove();
+                            colChange = valCol * 100;
+                            // valCol_D = valSal * 40;
+                            // // Text Value
+                            // svg_functMenu.append('text')
+                            //             .attr('class','sliderColText')
+                            //             .attr('x', 675)
+                            //             .attr('y', 90)
+                            //             .style('font-size', 12)
+                            //             .style('fill', '#DADADA')
+                            //             .text(d3.format('.2f')(valCol));
+
+                            // Call Web Worker (Algorithm)
+                            if(countCol > 0) {
+                                // // Loader icon
+                                // var loader = document.getElementById('loader');
+                                // loader.style.visibility = "visible";
+
+                                // Terminate old Worker and run new Worker
+                                myWorker.terminate();
+                                myWorker = new Worker('worker.js');
+                                // Post Message in Worker
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
+                                myWorker.onmessage = function(e) {
+                                    drawColormap(e.data[0]);
+                                    drawLinegraph(e.data[0]);
+                                    drawPlot(e.data[0]);
+                                    // loader.style.visibility = "hidden";
+                                    // scatter(e.data[2]);
+                                    // hist1(e.data[2]);
+                                    // hist2(e.data[2]);
+                                }
+                            }
+
+                        });
+
+    // Call Slider
+    svg_functMenu.append('g').attr('transform', 'translate(400,105)').call(sliderCol);
+    // // Initial Text Value
+    // svg_functMenu.append('text')
+    //             .attr('class','sliderColText')
+    //             .attr('x', 675)
+    //             .attr('y', 90)
+    //             .style('font-size', 12)
+    //             .style('fill', '#DADADA')
+    //             .text('0.10');
+}
+
+// Luminance Slider
+function drawLum() {
+    var dataLum = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
+    var sliderLum = d3.sliderBottom()
+                       .min(d3.min(dataLum))
+                       .max(d3.max(dataLum))
+                       .width(300)
+                       .tickFormat(d3.format('.2d'))
+                       .ticks(0)
+                       .step(1)
+                       .default([0,100])
+                       .displayValue(false)
+                       .fill('#761137')
+                       .handle(
+                            d3.symbol()
+                            .type(d3.symbolCircle)
+                            .size(100)()
+                        )
+                        // Onchange Value
+                        .on('onchange', new_lum => {
+                            svg_functMenu.selectAll('text.sliderLumText').remove();
+                            // For drawSlice2D function
+                            valLum = new_lum;
+                            // Text Value
+                            svg_functMenu.append('text')
+                                        .attr('class','sliderLumText')
+                                        .attr('x', 1425)
+                                        .attr('y', 30)
+                                        .style('font-size', 12)
+                                        .style('fill', '#DADADA')
+                                        .text(valLum.map(d3.format('.2d')).join("-"));
+                            console.log(valLum[0], valLum[1])
+                            
+                            // Call Web Worker (Algorithm)
+                            if(countCol > 0) {
+                                // // Loader icon
+                                // var loader = document.getElementById('loader');
+                                // loader.style.visibility = "visible";
+
+                                // Terminate old Worker and run new Worker
+                                myWorker.terminate();
+                                myWorker = new Worker('worker.js');
+                                // Post Message in Worker
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
+                                myWorker.onmessage = function(e) {
+                                    drawColormap(e.data[0]);
+                                    drawLinegraph(e.data[0]);
+                                    drawPlot(e.data[0]);
+                                    // loader.style.visibility = "hidden";
+                                }
+                            }
+                        });
+    // Call Slider
+    svg_functMenu.append('g').attr('transform', 'translate(1150,45)').call(sliderLum);
     // Initial Text Value
     svg_functMenu.append('text')
-                .attr('class','sliderSmoText')
-                .attr('x', 675)
-                .attr('y', 90)
+                .attr('class','sliderLumText')
+                .attr('x', 1425)
+                .attr('y', 30)
                 .style('font-size', 12)
                 .style('fill', '#DADADA')
-                .text('0.80');
+                .text('0-100');
 }
 
 // Key Points Slider
@@ -461,9 +567,11 @@ function drawKey() {
                                 myWorker.terminate();
                                 myWorker = new Worker('worker.js');
                                 // Post Message in Worker
-                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange] });
+                                myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
                                 myWorker.onmessage = function(e) {
                                     drawColormap(e.data[0]);
+                                    drawLinegraph(e.data[0]);
+                                    drawPlot(e.data[0]);
                                     // loader.style.visibility = "hidden";
                                     // scatter(e.data[2]);
                                     // hist1(e.data[2]);

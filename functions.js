@@ -74,12 +74,19 @@ function nameDifference(c1, c2) {
 }
 
 // PERCEPTUAL (EUCLEDIAN) DISTANCE -> CIE76 DISTANCE
+// function cie76Distance(c1, c2) {
+//     var i1 = index(c1);
+//     var i2 = index(c2);
+//     var col1 = c3.color[i1];
+//     var col2 = c3.color[i2];
+//     return Math.sqrt((col2.l - col1.l)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
+// }
 function cie76Distance(c1, c2) {
-    var i1 = index(c1);
-    var i2 = index(c2);
-    var col1 = c3.color[i1];
-    var col2 = c3.color[i2];
-    return Math.sqrt((col2.l - col1.l)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
+    // var i1 = index(c1);
+    // var i2 = index(c2);
+    // var col1 = c3.color(c1);
+    // var col2 = c3.color(c2);
+    return Math.sqrt((c2.l - c1.l)**2 + (c2.a - c1.a)**2 + (c2.b - c1.b)**2);
 }
 
 // PERCEPTUAL DISTANCE -> CIE00 DISTANCE

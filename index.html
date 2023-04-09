@@ -29,6 +29,8 @@
         <script src="colormap.js"></script>
         <script src="worker.js"></script>
         <script src="header.js"></script>
+        <script src="linegraph.js"></script>
+        <script src="plots.js"></script>
     </head>
 
     <body class='no-select'>
@@ -55,7 +57,30 @@
                 <div id='colormap'></div>
                 <div class='colorSel' id='colorSel'></div>
                 <!-- Canvas & Features -->
-                <canvas id='canvasMain' width='1100' height='65' style='border: solid 1px gray;'></canvas><br>
+                <canvas id='canvasMain' width='1300' height='65' style='border: solid 1px gray;'></canvas><br>
+                <button class="regenButton" onclick="regenColormap()">Regenerate Colormap</button>
+
+                <!-- LINEGRAPH -->
+                <div class='lineMenu' id='lineMenu'>
+                    <br>
+                    <input type='radio' name='lineButton' value='Luminance' class='lineButton' id='lineButton' checked onchange='lineChange()'>
+                    <label for='linearBut' class='option lumBut'>
+                        <span>Luminance</span>
+                    <input type='radio' name='lineButton' value='Saliency' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='salBut' class='option salBut'>
+                        <span>Saliency</span>
+                    <input type='radio' name='lineButton' value='CIE00 Distance' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='cie00But' class='option cie00But'>
+                        <span>CIE00 Distance</span>
+                    <input type='radio' name='lineButton' value='Name Difference' class='lineButton' id='lineButton' onchange='lineChange()'>
+                    <label for='nameBut' class='option nameBut'>
+                        <span>Name Difference</span>
+                    <div class='lineGraph' id='lineGraph'></div>
+                    <h2><u>LOCAL EDITS</u></h2>
+                    <!-- LAB Plots -->
+                    <div class='LABplots' id='LABplots'></div>
+                </div>
+
             </div>
         </div>
 
@@ -86,6 +111,22 @@
                                 .attr('viewBox', '0 0 1000 35')
                                 // .style('background', 'salmon')
                                 .classed('svg-content', true);
+
+            // Line Graph
+            var svg_linegraph = d3.select('div#lineGraph')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 200')
+                                // .style('background', 'plum')
+                                .classed('svg-content', true);
+
+            // LAB Plots
+            var svg_LABplots = d3.select('div#LABplots')
+                                .append('svg')
+                                .attr('preserveAspectRatio', 'xMinYMin meet')
+                                .attr('viewBox', '0 0 1000 350')
+                                // .style('background', 'palegoldenrod')
+                                .classed('svg-content', true);
 //.................................................................................................................................................................................................................//
             // CALL FUNCTIONS
 
@@ -114,7 +155,8 @@
             var paletteLen = 17;
             var valLum = [0,100];
             var selLum = 'Linear';
-            var colChange = 0;
+            var colChange = 10;
+            var mapLength = -10;
 
             // header.js
             headerName();
@@ -122,18 +164,26 @@
             var svg_functMenu;
             var menuFlag = false;
 
+            // linegraph.js
+            var valBtn = 'Luminance';
+            function lineChange() {
+                valBtn = d3.select('input[name="lineButton"]:checked').property("value");
+                drawLinegraph(datasetDrop);
+            }
+            drawAxes();
+
             // worker.js
             var myWorker = new Worker('worker.js');
 
             // Linear Weights
             var valSal_L = 0;
-            var valPU_L = -150; //-150
-            var valSmo_L = 100; //100
+            var valPU_L = -1; //-150
+            var valSmo_L = 5; //100
 
             // Diverging Weights
             var valSal_D = 0;
-            var valPU_D = -150; //-150
-            var valSmo_D = 500; //500
+            var valPU_D = -1; //-150
+            var valSmo_D = 5; //500
 
             var penColors = 0;
 //.................................................................................................................................................................................................................//
