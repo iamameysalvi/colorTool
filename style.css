@@ -121,7 +121,7 @@ body {
 }
 
 .topbar {
-    background-color: #222021;
+    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,121,79,1) 35%, rgba(0,212,255,1) 100%);
     overflow: hidden;
 }
 
@@ -164,6 +164,10 @@ input[type=text] {
     /* top: 100%; */
     left: 0;
     right: 0;
+}
+
+.dropAdjCol{
+    fill:linear-gradient(45deg, '#FFAAAA', '#734C8F');
 }
 
 .colorSearch-items div {

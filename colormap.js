@@ -103,6 +103,7 @@ function contains(container, point) {
 
 // Draw Main Colormap
 function drawColormap(data) {
+    
     // RAMP ARRAY
     var color_samples = data.length;
     var new_ramp = [];
@@ -314,6 +315,7 @@ function drawColor(data, sel) {
                     sel_allrect.filter(function () { 
                             var sel_text = d3.select(this).text();
                             var sel_col = (5 * (Math.round(selLAB[0]/5))) + "," + (5 * (Math.round(selLAB[1]/5))) + "," + (5 * (Math.round(selLAB[2]/5)));
+                            
                             return sel_text == sel_col;
                     })
                     .attr('width', 50)
@@ -334,11 +336,13 @@ function drawColor(data, sel) {
                     //......................................................................................c3.color[index] may get non-displayable colors (Match with colorDict values for a safer solution)
                     var possL = new Set();
                     var selColor = c3.color[index(d3.color(rectDrop.data()[0].fill))];
+                    console.log('###',d3.color(selColor))
                     for(i=0; i<colorDict.length; i++) {
                         var dictColor = c3.color[index(d3.color(colorDict[i].fill))];
                         var selND = nameDifference(selColor, dictColor);
                         if(selND < 0.2) {
                             possL.add(dictColor.l);
+                            console.log('line 334',colorDict[i].fill)
                         }
                     }
                     
@@ -357,6 +361,7 @@ function drawColor(data, sel) {
 
                         // Add Color to Possible L* values to Slider Canvas
                         var canWd = d3.select('rect.dropCanvas').attr('width');
+                        
                         var minPossL = Math.min.apply(this, [...possL]);
                         var maxPossL = Math.max.apply(this, [...possL]);
 
@@ -372,7 +377,7 @@ function drawColor(data, sel) {
                                         .attr('y', 140)
                                         .attr('width', wdPossL)
                                         .attr('height', 75)
-                                        .attr('fill', '#609078')
+                                        .attr('fill', d3.color(selColor))
                                         .attr('opacity', 0.05)
                                         .attr('stroke', '#000');
                         }
@@ -559,6 +564,7 @@ function drawColor(data, sel) {
                             flagRPos = false;
 
                             drawColor(data, sel);
+                            
                             svg_colormap.selectAll('text.sliderText').remove();
 
                             // Call Initialization
@@ -704,6 +710,7 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                                             Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).a),
                                             Math.round(d3.lab(d3.rgb(rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[0], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[1], rectDrop.attr('fill').slice(4,-1).split(",").map(x=>+x)[2])).b)
                                         );
+                                        
     
                                         var distDisplay = 1000;
                                         var distColor = [];
@@ -1104,18 +1111,46 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                         drawDropCol(dropX, wd, rectCol, dropRect);
                     });
                 });
+    
+                // const interpolate = d3.interpolateRgb(dropRect.fill,'white');
+                var colors = [ dropRect.fill, 'white' ];
+                // console.log('$$$$',d3.color(selColor))
 
     // Draw Added Colors - Adjusted L*
+    var svg = d3.select('body')
+        .append('svg')
+        .attr('width', 100)
+        .attr('height', 200);
+    var grad = svg.append('defs')
+        .append('linearGradient')
+        .attr('id', 'grad')
+        .attr('x1', '10%')
+        .attr('x2', '100%')
+        .attr('y1', '0%')
+        .attr('y2', '0%');
+    grad.selectAll('stop')
+        .data(colors)
+        .enter()
+        .append('stop')
+        .style('stop-color', function(d){ return d; })
+        .attr('offset', function(d,i){
+            return 100 * (i / (colors.length - 1)) + '%';
+    })
     svg_colormap.append('rect')
+                .data(colors)
+
                 .attr('class', 'dropAdjCol')
                 .attr('x', pos)
                 .attr('y', 140) // 140 for full height
                 .attr('width', wd)
                 .attr('height', 30) // 75 for full height
-                .attr('fill', dropRect.fill) // when dropRect is passed (after L* change)
+                .attr('fill', 'url(#grad)' )
+                //dropRect.fill when dropRect is passed (after L* change)
                 // .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
                 .attr('stroke', '#000');
 }
+
+
 
 // // DRAW COLOR BOXES FROM PLOT CHANGES (LOCAL)
 // function drawLocalCol(pos, wd, rectCol) {
