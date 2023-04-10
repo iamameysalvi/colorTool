@@ -338,7 +338,6 @@ function drawColor(data, sel) {
                         var selND = nameDifference(selColor, dictColor);
                         if(selND < 0.2) {
                             possL.add(dictColor.l);
-                            console.log('line 334',colorDict[i].fill)
                         }
                     }
                     
@@ -360,22 +359,49 @@ function drawColor(data, sel) {
                         
                         var minPossL = Math.min.apply(this, [...possL]);
                         var maxPossL = Math.max.apply(this, [...possL]);
+                        
+                        var colors = [ d3.color(selColor), 'white' ];
+        
+                        // Draw Added Colors - Adjusted L*
+                        var svg = d3.select('body')
+                            .append('svg')
+                            .attr('width', 100)
+                            .attr('height', 200);
+                        var grad = svg.append('defs')
+                            .append('linearGradient')
+                            .attr('id', 'grad')
+                            .attr('x1', '10%')
+                            .attr('x2', '100%')
+                            .attr('y1', '0%')
+                            .attr('y2', '0%');
+                        grad.selectAll('stop')
+                            .data(colors)
+                            .enter()
+                            .append('stop')
+                            .style('stop-color', function(d){ return d; })
+                            .attr('offset', function(d,i){
+                                return 100 * (i / (colors.length - 1)) + '%';
+                        })
+                        
 
                         // Linear Profile
                         if(selLum == "Linear") {
+                            
                             var minPossX = minPossL * canWd/100;
                             var wdPossL = (maxPossL - minPossL) * canWd/100;
     
                             // Draw Temp Boxes for Possible L* Values (Hover)
                             svg_colormap.append('rect')
+                                        .data(colors)
                                         .attr('class', 'possCol')
                                         .attr('x', minPossX)
                                         .attr('y', 140)
                                         .attr('width', wdPossL)
                                         .attr('height', 75)
-                                        .attr('fill', d3.color(selColor))
-                                        .attr('opacity', 0.05)
+                                        .attr('fill', 'url(#grad)')
+                                        .attr('fill-opacity', .5)
                                         .attr('stroke', '#000');
+                            
                         }
                         // Diverging Profile
                         else if(selLum == "Diverging") {
@@ -390,8 +416,8 @@ function drawColor(data, sel) {
                                         .attr('y', 140)
                                         .attr('width', wdPossL)
                                         .attr('height', 75)
-                                        .attr('fill', '#609078')
-                                        .attr('opacity', 0.05)
+                                        .attr('fill', d3.color(selColor))
+                                        .attr('fill-opacity', .5)
                                         .attr('stroke', '#000');
                             svg_colormap.append('rect')
                                         .attr('class', 'possCol')
@@ -399,10 +425,12 @@ function drawColor(data, sel) {
                                         .attr('y', 140)
                                         .attr('width', wdPossL)
                                         .attr('height', 75)
-                                        .attr('fill', '#609078')
-                                        .attr('opacity', 0.05)
+                                        .attr('fill', d3.color(selColor))
+                                        .attr('fill-opacity', .5)
                                         .attr('stroke', '#000');
                         }
+
+                        
 
 
                         if(contains(svg_colormap.select('rect.dropCanvas'), newMouse) == true) {
@@ -412,24 +440,26 @@ function drawColor(data, sel) {
                             var dropWd = Math.ceil(paletteLen * newMouse[0]/canWd) * (canWd/paletteLen) - dropX;
                             // Draw Temp Boxes (Hover)
                             svg_colormap.append('rect')
+                            .data(colors)
                                         .attr('class', 'contCol')
                                         .attr('x', dropX)
                                         .attr('y', 140)
                                         .attr('width', dropWd)
                                         .attr('height', 75)
-                                        .attr('fill', '#FFD0D0')
-                                        .attr('opacity', 0.05)
+                                        .attr('fill', d3.color(selColor))
+                                        .attr('opacity', 0.5)
                                         .attr('stroke', '#000');
                             if(contains(svg_colormap.select('rect.contCol'),newMouse) == true) {
                                 // Draw Temp Boxes
                                 svg_colormap.append('rect')
+                                            .data(colors)
                                             .attr('class', 'hoverCol')
                                             .attr('x', dropX)
                                             .attr('y', 140)
                                             .attr('width', dropWd)
                                             .attr('height', 75)
-                                            .attr('fill', '#FFD0D0')
-                                            .attr('opacity', 0.05)
+                                            .attr('fill', 'url(#grad)')
+                                            .attr('opacity', 0.5)
                                             .attr('stroke', '#000');
                             }
                             else {
@@ -443,6 +473,8 @@ function drawColor(data, sel) {
                         }
                         svg_colormap.select('rect.dropCanvas').attr('opacity', 1);
                     })
+
+                    
 
                     d3.select(document).on('mouseup', function() {
                         svg_colormap.selectAll('rect.hoverCol').remove();
@@ -573,6 +605,33 @@ function drawColor(data, sel) {
 // DRAW DROPPED COLOR BOXES
 function drawDropCol(pos, wd, rectCol, dropRect) {
     // Draw Added Colors - Actual L*
+    svg_colormap.append('rect')
+                .attr('class', 'dropCol')
+                .attr('x', pos+wd)
+                .attr('y', 170) // 140 for full height
+                .attr('width', wd)
+                .attr('height', 45) // 75 for full height
+                // .attr('fill', rectCol.fill) // when dropRect is passed (after L* change)
+                .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
+                .attr('stroke', '#000')
+    svg_colormap.append('rect')
+                .attr('class', 'dropCol')
+                .attr('x', pos+2*wd)
+                .attr('y', 170) // 140 for full height
+                .attr('width', wd)
+                .attr('height', 45) // 75 for full height
+                // .attr('fill', rectCol.fill) // when dropRect is passed (after L* change)
+                .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
+                .attr('stroke', '#000')
+    svg_colormap.append('rect')
+                .attr('class', 'dropCol')
+                .attr('x', pos+3*wd)
+                .attr('y', 170) // 140 for full height
+                .attr('width', wd)
+                .attr('height', 45) // 75 for full height
+                // .attr('fill', rectCol.fill) // when dropRect is passed (after L* change)
+                .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
+                .attr('stroke', '#000')
     svg_colormap.append('rect')
                 .attr('class', 'dropCol')
                 .attr('x', pos)
@@ -1143,40 +1202,77 @@ function drawDropCol(pos, wd, rectCol, dropRect) {
                         drawDropCol(dropX, wd, rectCol, dropRect);
                     });
                 });
-    
-                // const interpolate = d3.interpolateRgb(dropRect.fill,'white');
-                var colors = [ dropRect.fill, 'white' ];
-                // console.log('$$$$',d3.color(selColor))
 
-    // Draw Added Colors - Adjusted L*
-    var svg = d3.select('body')
-        .append('svg')
-        .attr('width', 100)
-        .attr('height', 200);
-    var grad = svg.append('defs')
-        .append('linearGradient')
-        .attr('id', 'grad')
-        .attr('x1', '10%')
-        .attr('x2', '100%')
-        .attr('y1', '0%')
-        .attr('y2', '0%');
-    grad.selectAll('stop')
-        .data(colors)
-        .enter()
-        .append('stop')
-        .style('stop-color', function(d){ return d; })
-        .attr('offset', function(d,i){
-            return 100 * (i / (colors.length - 1)) + '%';
-    })
-    svg_colormap.append('rect')
+        // const interpolate = d3.interpolateRgb(dropRect.fill,'white');
+        var colors = [ dropRect.fill, 'white' ];
+        
+        const i = d3.interpolate(dropRect.fill,"white")
+        console.log('$$$$',(i(0.5)))
+        // Draw Added Colors - Adjusted L*
+        var svg = d3.select('body')
+            .append('svg')
+            .attr('width', 100)
+            .attr('height', 200);
+        var grad = svg.append('defs')
+            .append('linearGradient')
+            .attr('id', 'grad')
+            .attr('x1', '10%')
+            .attr('x2', '100%')
+            .attr('y1', '0%')
+            .attr('y2', '0%');
+        grad.selectAll('stop')
+            .data(colors)
+            .enter()
+            .append('stop')
+            .style('stop-color', function(d){ return d; })
+            .attr('offset', function(d,i){
+                return 100 * (i / (colors.length - 1)) + '%';
+        })
+        svg_colormap.append('rect')
+                    .data(colors)
+
+                    .attr('class', 'dropAdjCol')
+                    .attr('x', pos)
+                    .attr('y', 140) // 140 for full height
+                    .attr('width', wd)
+                    .attr('height', 30) // 75 for full height
+                    .attr('fill', dropRect.fill)
+                    //dropRect.fill when dropRect is passed (after L* change)
+                    // .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
+                    .attr('stroke', '#000');
+                    svg_colormap.append('rect')
+                    .data(colors)
+
+                    .attr('class', 'dropAdjCol')
+                    .attr('x', pos+wd)
+                    .attr('y', 140) // 140 for full height
+                    .attr('width', wd)
+                    .attr('height', 30) // 75 for full height
+                    .attr('fill', d3.color(i(0.2)) )
+                    //dropRect.fill when dropRect is passed (after L* change)
+                    // .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
+                    .attr('stroke', '#000');
+            svg_colormap.append('rect')
                 .data(colors)
 
                 .attr('class', 'dropAdjCol')
-                .attr('x', pos)
+                .attr('x', pos+2*wd)
                 .attr('y', 140) // 140 for full height
                 .attr('width', wd)
                 .attr('height', 30) // 75 for full height
-                .attr('fill', 'url(#grad)' )
+                .attr('fill', i(0.4))
+                //dropRect.fill when dropRect is passed (after L* change)
+                // .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
+                .attr('stroke', '#000');
+            svg_colormap.append('rect')
+                .data(colors)
+
+                .attr('class', 'dropAdjCol')
+                .attr('x', pos+3*wd)
+                .attr('y', 140) // 140 for full height
+                .attr('width', wd)
+                .attr('height', 30) // 75 for full height
+                .attr('fill', i(0.6))
                 //dropRect.fill when dropRect is passed (after L* change)
                 // .attr('fill', rectCol.attr('fill')) // when rectDrop is passed (before L* change)
                 .attr('stroke', '#000');
