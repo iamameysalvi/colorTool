@@ -3,15 +3,13 @@ c3.load('lib/colorname/c3_data.json');
 
 // CREATE CMAP: L,a,b:index
 var cmap = {};
-for (var c=0; c<c3.color.length; ++c) 
-{
+for (var c=0; c<c3.color.length; ++c) {
     var x = c3.color[c];
     cmap[[x.l,x.a,x.b].join(",")] = c;
 }
 
 // CMAP IN LAB
-function index(c) 
-{
+function index(c) {
     var x = d3.lab(c),
     l = 5 * Math.round(x.l/5),
     a = 5 * Math.round(x.a/5),
@@ -21,8 +19,7 @@ function index(c)
 }
 
 // RGB TO HEX
-function rgbToHex(r, g, b) 
-{
+function rgbToHex(r, g, b) {
     function componentToHex(c) {
         var hex = c.toString(16);
         return hex.length == 1 ? "0" + hex : hex;
@@ -31,15 +28,13 @@ function rgbToHex(r, g, b)
 }
 
 // CONVERT COLORS TO LAB
-function fill_color(c)
-{
+function fill_color(c) {
     var y = d3.lab(c);
     return y.toString(16);
 }
 
 // COLOR NAMES AND DISTRIBUTION
-function termDistribution(c)
-{
+function termDistribution(c) {
     var i = index(c);
     var terms = c3.terms;
     var dist = [];
@@ -55,16 +50,14 @@ function termDistribution(c)
 }
 
 // COLOR NAMES
-function nameDistribution(c)
-{
+function nameDistribution(c) {
     var newDist = termDistribution(c).slice(0,25);
     name_d = newDist[0].term;
     return name_d;
 }
 
 // SALIENCY
-function nameSalience(c) 
-{
+function nameSalience(c) {
     var minE = -4.5;
     var maxE = 0.0;
     var i = index(c);
@@ -74,21 +67,26 @@ function nameSalience(c)
 }
 
 // NAME DIFFERENCE
-function nameDifference(c1, c2) 
-{
+function nameDifference(c1, c2) {
     var i1 = index(c1);
     var i2 = index(c2);
     return 1 - c3.color.cosine(i1, i2);
 }
 
 // PERCEPTUAL (EUCLEDIAN) DISTANCE -> CIE76 DISTANCE
-function cie76Distance(c1, c2) 
-{
-    var i1 = index(c1);
-    var i2 = index(c2);
-    var col1 = c3.color[i1];
-    var col2 = c3.color[i2];
-    return Math.sqrt((col2.l - col1.l)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
+// function cie76Distance(c1, c2) {
+//     var i1 = index(c1);
+//     var i2 = index(c2);
+//     var col1 = c3.color[i1];
+//     var col2 = c3.color[i2];
+//     return Math.sqrt((col2.l - col1.l)**2 + (col2.a - col1.a)**2 + (col2.b - col1.b)**2);
+// }
+function cie76Distance(c1, c2) {
+    // var i1 = index(c1);
+    // var i2 = index(c2);
+    // var col1 = c3.color(c1);
+    // var col2 = c3.color(c2);
+    return Math.sqrt((c2.l - c1.l)**2 + (c2.a - c1.a)**2 + (c2.b - c1.b)**2);
 }
 
 // PERCEPTUAL DISTANCE -> CIE00 DISTANCE
@@ -210,53 +208,39 @@ function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Create Color Dictionary: LAB, Saliency, (Name)
-var color_dict = [];
+// Create Color Dictionary: LAB, Saliency, Name, FillColor (RGB)
+var colorDict = [];
 for (var c=0; c<c3.color.length; c++) {
     var x = c3.color[c];
-    color_dict.push({
-        lab: [x.l,x.a,x.b],
+    colorDict.push({
+        LAB: [x.l,x.a,x.b],
         saliency: nameSalience(x),
         name: nameDistribution(x),
-        fill: fill_color(x)
+        fill: fill_color(x),
+        index: index(x)
     });
-    // color_dict.sort(function(a,b) { return b.saliency - a.saliency});
 }
-// console.log(color_dict);
+// Removed Non-displayable colors and updated color dictionary
+for(c=0; c<colorDict.length; c++) {
+    var dispTest = d3.lab(
+            colorDict[c].LAB[0],
+            colorDict[c].LAB[1],
+            colorDict[c].LAB[2]
+        );
+    if(dispTest.displayable() == false) {
+        colorDict.splice(c, 1);
+        c=c-1;
+    }
+}
 
-// // Create Color Dictionary: LAB, Saliency, (Name)
-// var colorArray = [];
-// for (var c=0; c<c3.color.length; c++) {
-//     var x = c3.color[c];
-//     colorArray.push({
-//         [x.l,x.a,x.b]
+// // Create Name Dict of most Salient: Name, LAB
+// var name_map = [];
+// var W = c3.terms.length;
+// for (var i=0; i<W; ++i) {
+//     name_map.push({
+//         name: c3.terms[i],
+//         LAB: [(c3.terms.center[i].l),(c3.terms.center[i].a),(c3.terms.center[i].b)],
+//         saliency: nameSalience(d3.lab(c3.terms.center[i].l,c3.terms.center[i].a,c3.terms.center[i].b))
 //     });
-// }
-// // console.log(color_dict);
-
-// Create Name Dict of most Salient: Name, LAB
-var name_map = [];
-var W = c3.terms.length;
-for (var i=0; i<W; ++i) {
-    name_map.push({
-        name: c3.terms[i],
-        LAB: [(c3.terms.center[i].l),(c3.terms.center[i].a),(c3.terms.center[i].b)],
-        saliency: nameSalience(d3.lab(c3.terms.center[i].l,c3.terms.center[i].a,c3.terms.center[i].b))
-    });
-    name_map.sort(function(a,b) { return b.saliency - a.saliency});
-}
-
-
-// // Blur Window
-// function winBlur() {
-//     var containerElement = document.getElementById('main_container');
-//     var overlayEle = document.getElementById('overlay');
-
-//     if (state) {
-//         overlayEle.style.display = 'block';
-//         containerElement.setAttribute('class', 'blur');
-//     } else {
-//         overlayEle.style.display = 'none';
-//         containerElement.setAttribute('class', null);
-//     }
+//     name_map.sort(function(a,b) { return b.saliency - a.saliency});
 // }
