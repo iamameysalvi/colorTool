@@ -72,7 +72,7 @@ body {
 .grid-top {
     display: grid;
     /* grid-template-columns: 1.5fr 1.5fr; */
-    grid-template-columns: 1.25fr 1.75fr;
+    grid-template-columns: 1fr 2fr;
     grid-template-rows: 100%;
     grid-gap: 20px;
     margin-left: 10px;
@@ -226,4 +226,55 @@ select#profileButton option[value='linear'] {
     position: absolute;
     top: 1000;
     left: 0;
+}
+
+.debugTool {
+    float: right;
+    font-size: 20px;
+}
+
+/* DEBUG TOOL - GRID */
+.grid-debugTop {
+    display: grid;
+    /* grid-template-columns: 1.5fr 1.5fr; */
+    grid-template-columns: 1.3fr 0.85fr 0.85fr;
+    grid-template-rows: 100%;
+    grid-gap: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 0px;
+}
+
+.grid-canvas {
+    display: grid;
+    /* grid-template-columns: 1.5fr 1.5fr; */
+    grid-template-columns: 1fr;
+    grid-template-rows: 100%;
+    /* grid-gap: 10px; */
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+/* HEADERS */
+.grid-debug h2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-family: 'Georgia', serif;
+    /* color: #bbc3c8; */
+    font-style: italic; 
+    font-size: 18px
+}
+/* LINES AROUND HEADERS */
+.grid-debug h2:before,
+.grid-debug h2:after {
+    content: '';
+    border-top: 2px solid;
+    margin: 0 20px 0 0;
+    flex: 1 0 20px;
+}    
+.grid-debug h2:after {
+    margin: 0 0 0 20px;
 }
