@@ -211,9 +211,13 @@ onmessage = function(e) {
             scoreArr.push([finScore, nSalience, normUnif, angleDifference, palette]);
         }
 
+        //console.log("Actual normUnif: ", normUnif);
+        //console.log("Actual angleDifference: ", angleDifference);
+        //console.log("Actual meancie76Dist", meancie76Dist);
+        //console.log("Actual palette: ", palette);
+
         return finScore;
     }
-
 
     // Random Color Disturb
     function randomDisturbColors(palette) {
@@ -405,7 +409,7 @@ onmessage = function(e) {
     function simulatedAnnealing2FindBestPalette(size, evaluateFunc, minl, maxl) {
         var iterate_times = 0;
         var max_temper = 100000; // initial temperature
-        var dec = 0.999; // decrementation
+        var dec = 0.99; // decrementation
         // var dec = val_algoIter; 
         var max_iteration_times = 10000000; 
         var end_temper = 0.001; // end temperature
@@ -436,7 +440,6 @@ onmessage = function(e) {
                     if (preferredObj.score - o.score < 0) {
                         preferredObj = o;
                         postMessage([preferredObj.id])
-                        // console.log(preferredObj.id);
                         // drawColormap(preferredObj.id);
                     }
                 }

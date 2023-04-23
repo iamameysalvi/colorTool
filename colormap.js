@@ -1,3 +1,6 @@
+let normUnifArray = [];
+let angleDifferenceArray = [];
+
 function drawCanvas() {
     // Canvas Slider
     svg_colormap.append('rect')
@@ -58,6 +61,21 @@ function drawSelected() {
                 .attr('fill', '#F5F5F5');
 }
 
+async function regenColormapGraph() {
+    let iterations = 0;
+    for (var i=0; i<10 ; i++)
+    {
+        await new Promise(resolve => setTimeout(() => {
+            regenColormap();
+            iterations++;
+            if (iterations === 10) {
+                generateGraph(normUnifArray, angleDifferenceArray);
+            }
+            resolve();
+        }, 5000));
+    }
+}
+
 function regenColormap() {
     // Call Web Worker (Algorithm)
     // Terminate old Worker and run new Worker
@@ -67,6 +85,14 @@ function regenColormap() {
     // Post Message in Worker
     myWorker.postMessage({ 'args': [paletteLen, valLum[0], valLum[1], datasetDrop, selLum, valSal_L, valPU_L, valSmo_L, valSal_D, valPU_D, valSmo_D, colChange, mapLength] });
     myWorker.onmessage = function(e) {
+        // Retrieve scoreArr from worker.js
+        var normUnif = e.data[2][0][2];
+        var angleDifference = e.data[2][0][3];
+ 
+        // Save the values to global arrays
+        normUnifArray.push(normUnif);
+        angleDifferenceArray.push(angleDifference);
+
         // console.log(e.data[0])
         drawColormap(e.data[0]);
         drawLinegraph(e.data[0]);
@@ -80,6 +106,52 @@ function regenColormap() {
         // hist2(e.data[2]);
     }
 }
+
+// Generate graph for scores
+function generateGraph(normUnifArray, angleDifferenceArray) {
+    console.log("normUnifArray:", normUnifArray);
+    console.log("angleDifferenceArray:", angleDifferenceArray);
+    // Create trace for normUnifArray
+    var normUniformity = {
+        x: Array.from(Array(normUnifArray.length).keys()),
+        y: normUnifArray,
+        mode: 'lines',
+        name: 'normUniformity',
+        line: {
+            color: 'red'
+        }
+    };
+
+    // Create trace for angleDifferenceArray
+    var angleDiff = {
+        x: Array.from(Array(angleDifferenceArray.length).keys()),
+        y: angleDifferenceArray,
+        mode: 'lines',
+        name: 'angleDiff',
+        line: {
+            color: 'green'
+        }
+    };
+
+    // Create data array with both traces
+    var data = [normUniformity, angleDiff];
+
+    // Define layout
+    var layout = {
+        title: 'NormUnif vs AngleDifference',
+        xaxis: {
+            title: 'Index',
+            dtick: 1
+        },
+        yaxis: {
+            title: 'Value'
+        },
+        width: 800,
+        height: 500
+    };
+  
+    Plotly.newPlot('graphDiv', data, layout);
+}     
 
 // Point within Element
 function contains(container, point) {

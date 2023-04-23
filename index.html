@@ -23,6 +23,8 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
 
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
         <link rel="stylesheet" href="style.css" />
         <script src="functions.js"></script>
         <script src="slice2D.js"></script>
@@ -59,6 +61,7 @@
                 <!-- Canvas & Features -->
                 <canvas id='canvasMain' width='1300' height='65' style='border: solid 1px gray;'></canvas><br>
                 <button class="regenButton" onclick="regenColormap()">Regenerate Colormap</button>
+                <button class="regenButton" onclick="regenColormapGraph()">Graph for NormUnif vs AngleDiff</button>
 
                 <!-- LINEGRAPH -->
                 <div class='lineMenu' id='lineMenu'>
@@ -80,6 +83,8 @@
                     <!-- LAB Plots -->
                     <div class='LABplots' id='LABplots'></div>
                 </div>
+
+                <div id="graphDiv"></div>
 
             </div>
         </div>
